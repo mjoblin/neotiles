@@ -17,6 +17,14 @@ class NeoTiles:
             'handler': handler,
         })
 
+    @property
+    def tiles(self):
+        return self._tiles
+
+    @property
+    def tile_handlers(self):
+        return [tile['handler'] for tile in self._tiles]
+
     def data(self, in_data):
         for tile in self._tiles:
             tile.handler.data(in_data)
@@ -46,13 +54,16 @@ class NeoTiles:
         for row_num in range(len(matrix)):
             for col_num in range(len(matrix[row_num])):
                 color = matrix[row_num][col_num]
-                print('[{:2d}] : {:.3f}, {:.3f}, {:.3f}'.format(
-                    pixel_num, color[0], color[1], color[2]))
+                print('[{:2d}] : {:7.3f}, {:7.3f}, {:7.3f}  '.format(
+                    pixel_num, color[0], color[1], color[2]), end='')
                 pixel_num += 1
+
+            print()
 
 
 # ----------------------------------------------------------------------------
 class TileHandler:
+    # TODO: replace size getter with num_cols and num_rows
     def __init__(self, size=None):
         self._data = None
         self._default_color = (
