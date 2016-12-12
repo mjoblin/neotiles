@@ -2,7 +2,7 @@
 
 from collections import deque
 
-from neotiles import NeoTiles, TileHandler
+from neotiles import NeoTiles, TileColor, TileHandler, TilePosition, TileSize
 from netdumplings import DumplingEater
 
 
@@ -39,6 +39,8 @@ class PacketCountIntensityTile(TileHandler):
         :param avg_intensity:
         """
         super().__init__()
+        self.clear()
+
         self._protocol = protocol
         self._max_color = max_color
         self._avg_intensity = avg_intensity
@@ -74,10 +76,12 @@ class PacketCountIntensityTile(TileHandler):
 
         for row in range(self.size[1]):
             for col in range(self.size[0]):
-                self.set_pixel(
-                    (col, row),
-                    tuple([val * display_intensity for val in self._max_color])
+                display_color = tuple(
+                    [int(val * display_intensity)
+                     for val in self._max_color.rgbw_denormalized]
                 )
+                self.set_pixel(
+                    TilePosition(col, row), TileColor(*display_color))
 
 
 class Packtrix:
@@ -92,20 +96,20 @@ class Packtrix:
         )
 
         tcp_intensity = PacketCountIntensityTile(
-            protocol='TCP', max_color=(1, 0, 0))
+            protocol='TCP', max_color=TileColor(1, 0, 0))
         udp_intensity = PacketCountIntensityTile(
-            protocol='IPv6', max_color=(0, 1, 0))
+            protocol='IPv6', max_color=TileColor(0, 1, 0))
         ip6_intensity = PacketCountIntensityTile(
-            protocol='IPv6', max_color=(0, 0, 1))
+            protocol='IPv6', max_color=TileColor(0, 0, 1))
 
         self.neotiles = NeoTiles(size=(8, 8))
         print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
-            size=(8, 4), root=(0, 0), handler=tcp_intensity)
+            size=TileSize(8, 4), root=TilePosition(0, 0), handler=tcp_intensity)
         self.neotiles.register_tile(
-            size=(8, 2), root=(0, 4), handler=udp_intensity)
+            size=TileSize(8, 2), root=TilePosition(0, 4), handler=udp_intensity)
         self.neotiles.register_tile(
-            size=(8, 2), root=(0, 6), handler=ip6_intensity)
+            size=TileSize(8, 2), root=TilePosition(0, 6), handler=ip6_intensity)
 
     async def on_dumpling(self, dumpling):
         """
@@ -116,8 +120,8 @@ class Packtrix:
         for tile_handler in self.neotiles.tile_handlers:
             tile_handler.data(dumpling)
 
-        self.neotiles.draw()
         print('{}\n'.format(self.neotiles))
+        self.neotiles.draw()
 
     def run(self):
         """
