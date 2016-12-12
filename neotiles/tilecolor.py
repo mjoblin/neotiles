@@ -1,4 +1,23 @@
 class TileColor:
+    """
+    Represents a single tile pixel color.
+
+    The ``red``, ``blue``, ``green``, and ``white`` components can either be
+    between 0 and 1 (normalized), or between 0 and 255.  TileColor will attempt
+    to determine automatically whether the components are normalized, but this
+    can be forced with ``normalized`` (setting ``normalized=True`` will not
+    force the components to be between 0 and 1, but will instead force
+    TileColor to assume that they are).
+
+    The ``white`` component will only have an effect on neopixels which
+    support RGBW.
+
+    :param red: (float|int) Red component.
+    :param green: (float|int) Green component.
+    :param blue: (float|int) Blue component.
+    :param white: (float|int) White component.
+    :param normalized: (bool) Whether the color is normalized.
+    """
     def __init__(self, red=0, green=0, blue=0, white=0, normalized=None):
         self._red = red
         self._green = green
@@ -16,26 +35,45 @@ class TileColor:
 
     @property
     def red(self):
+        """
+        The red component.  Read only.
+        """
         return self._red
 
     @property
     def green(self):
+        """
+        The green component.  Read only.
+        """
         return self._green
 
     @property
     def blue(self):
+        """
+        The blue component.  Read only.
+        """
         return self._blue
 
     @property
     def white(self):
+        """
+        The white component.  Read only.
+        """
         return self._white
 
     @property
     def is_normalized(self):
+        """
+        Whether the color is normalized or not.  When normalized, the different
+        color component values are expected to be between 0 and 1.  Read only.
+        """
         return self._normalized
 
     @property
     def int(self):
+        """
+        The color as an integer.  Read only.
+        """
         return (
             self._denormalize(self._white) << 24 |
             self._denormalize(self._red) << 16 |
@@ -45,14 +83,24 @@ class TileColor:
 
     @property
     def rgb(self):
+        """
+        The color as a tuple of RGB values.  Read only.
+        """
         return self.red, self.green, self.blue
 
     @property
     def rgbw(self):
+        """
+        The color as a tuple of RGBW values.  Read only.
+        """
         return self.red, self.green, self.blue, self.white
 
     @property
     def rgb_denormalized(self):
+        """
+        The color as a tuple of denormalized RGB values (between 0 and 255 for
+        each component).  Read only.
+        """
         return (
             self._denormalize(self.red),
             self._denormalize(self.green),
@@ -61,6 +109,10 @@ class TileColor:
 
     @property
     def rgbw_denormalized(self):
+        """
+        The color as a tuple of denormalized RGBW values (between 0 and 255 for
+        each component).  Read only.
+        """
         return (
             self._denormalize(self.red),
             self._denormalize(self.green),

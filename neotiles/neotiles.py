@@ -11,8 +11,30 @@ TileSize = namedtuple('TileSize', 'cols rows')
 
 class NeoTiles:
     """
+    Manages all the tiles being displayed in a neopixel matrix.
 
-    :param size: (:class:`TileSize`)
+    Example usage (an 8x2 tile on top of an 8x6 tile): ::
+
+        from neotiles import NeoTiles, TileHandler
+
+        tiles = NeoTiles(size=(8, 8))
+
+        tiles.register_tile(
+            size=(8, 2), root=(0, 0), handler=TileHandler())
+        tiles.register_tile(
+            size=(8, 6), root=(2, 0), handler=TileHandler())
+
+        # Display the pixel values on the neopixel matrix.
+        tiles.draw()
+
+        # Display the pixel values in the console.
+        print(tiles)
+
+    :param size: (:class:`TileSize`) Size (as the number of columns and rows)
+        of the neopixel matrix.
+    :param intensity: (float) Intensity of the matrix display.  0.5 will
+        display all pixels at half intensity of whatever the tile handlers
+        are setting each pixel to.
     """
     def __init__(self, size=None, intensity=1.0):
         if size is None:
@@ -62,26 +84,6 @@ class NeoTiles:
 
         return matrix_string.rstrip()
 
-    @property
-    def intensity(self):
-        return self._intensity
-
-    @intensity.setter
-    def intensity(self, val):
-        try:
-            if val >= 0.0 and val <= 1.0:
-                self._intensity = val
-        except TypeError:
-            pass
-
-    @property
-    def tiles(self):
-        return self._tiles
-
-    @property
-    def tile_handlers(self):
-        return [tile['handler'] for tile in self._tiles]
-
     def _display_color(self, color):
         return tuple([int(i * self.intensity) for i in color.rgbw_denormalized])
 
@@ -98,7 +100,7 @@ class NeoTiles:
         Create a 2D matrix representing the entire pixel matrix, made up of
         each of the individual tiles.
 
-        :return:
+        :return: ()
         """
         matrix = self._genenerate_empty_matrix()
 
@@ -115,13 +117,46 @@ class NeoTiles:
 
         return matrix
 
+    @property
+    def intensity(self):
+        """
+        The intensity (between 0 and 1) of the matrix display.  Read/write.
+        """
+        return self._intensity
+
+    @intensity.setter
+    def intensity(self, val):
+        try:
+            if val >= 0.0 and val <= 1.0:
+                self._intensity = val
+        except TypeError:
+            pass
+
+    @property
+    def tiles(self):
+        """
+        All registered tiles.  Read only.  Returned as a list of dictionaries
+        which contain the ``size``, ``root``, and ``handler`` keys
+        (:class:`TileSize`, :class:`TilePosition`, and :class:`TileHandler`
+        objects respectively).
+        """
+        return self._tiles
+
+    @property
+    def tile_handlers(self):
+        """
+        All registered tile handlers.  Read only.
+        """
+        return [tile['handler'] for tile in self._tiles]
+
     def register_tile(self, size=None, root=None, handler=None):
         """
+        Registers a tile.
 
-        :param size:
-        :param root:
-        :param handler:
-        :return:
+        :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
+        :param root: (:class:`TilePosition`) Position of the top left corner
+            of the tile within the neopixel matrix.
+        :param handler: (:class:`TileHandler`) Handles the tile behavior.
         """
         # TODO: Consider making _tiles an ordered dict; or a different
         #   structure that allows for removal and insertion.
@@ -136,17 +171,19 @@ class NeoTiles:
 
     def data(self, in_data):
         """
+        Takes the ``in_data`` and sends it to all the registered tiles.
 
-        :param in_data:
-        :return:
+        All tiles which receive the incoming data are expected to set their
+        pixel colors appropriately.
+
+        :param in_data: (any) Input data.
         """
         for tile in self._tiles:
             tile.handler.data(in_data)
 
     def draw(self):
         """
-
-        :return:
+        Displays the current pixel values of all tiles on the neopixel matrix.
         """
         matrix = self._generate_matrix()
 
@@ -164,8 +201,10 @@ class NeoTiles:
 
     def clear(self, show=True):
         """
+        Clears the matrix (sets all pixels to ``TileColor(0, 0, 0, 0)``).
 
-        :return:
+        :param show: (bool) Whether to draw the cleared pixels to the
+            neopixel matrix.
         """
         for pixel_num in range(self._led_count):
             self.hardware_matrix.setPixelColor(pixel_num, 0)

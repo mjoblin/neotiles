@@ -1,17 +1,25 @@
 neotiles
 ========
 
-Contents:
+* Installing ``neopixel`` library.
+* Configure Pi 3 audio.
+* Link to 8x8 matrix.
+* Link to packtrix example.
 
-.. toctree::
-   :maxdepth: 2
+.. automodule:: neotiles
 
+.. autoclass:: NeoTiles
+   :members:
 
+.. autoclass:: TileHandler
+   :members:
 
-Indices and tables
-==================
+.. autoclass:: TileColor
+   :members:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. autoclass:: TilePosition
+   :members:
+
+.. autoclass:: TileSize
+   :members:
 
