@@ -1,21 +1,61 @@
-import logging
-import random
+from collections import namedtuple
+
+from neopixel import Adafruit_NeoPixel, Color, ws
 
 
-# ----------------------------------------------------------------------------
+Pos = namedtuple('Pos', 'x y')
+Size = namedtuple('Size', 'cols rows')
+
+
 class NeoTiles:
-    def __init__(self, size=None):
+    """
+
+    :param size:
+    """
+    def __init__(self, size=None, max_intensity=255):
         self._size = size
+        self._max_intensity = max_intensity
+        self._led_count = size[0] * size[1]
+
+        # List of tiles we'll be displaying inside the matrix.
         self._tiles = []
 
-    def register_tile(self, size=None, root=None, handler=None):
-        handler.size = size
+        # Initialize the matrix.
+        # TODO: Make these accessible from constructor.
+        led_pin = 18
+        led_freq_hz = 800000
+        led_dma = 5
+        led_brightness = 8
+        led_invert = False
+        strip_type = ws.WS2811_STRIP_GRB
 
-        self._tiles.append({
-            'size': size,
-            'root': root,
-            'handler': handler,
-        })
+        self.hardware_matrix = Adafruit_NeoPixel(
+            self._led_count, led_pin, freq_hz=led_freq_hz, dma=led_dma,
+            invert=led_invert, brightness=led_brightness, strip_type=strip_type
+        )
+
+        self.hardware_matrix.begin()
+
+    def __repr__(self):
+        return '<{}(size=({}, {}))>'.format(
+            self.__class__.__name__, self._size[0], self._size[1])
+
+    def __str__(self):
+        matrix = self._generate_matrix()
+
+        matrix_string = ''
+        pixel_num = 0
+
+        for row_num in range(len(matrix)):
+            for col_num in range(len(matrix[row_num])):
+                color = matrix[row_num][col_num]
+                matrix_string += '[{:2d}] {:3.0f},{:3.0f},{:3.0f}  '.format(
+                    pixel_num, *self._normalized_to_display_color(color))
+                pixel_num += 1
+
+            matrix_string += '\n'
+
+        return matrix_string.rstrip()
 
     @property
     def tiles(self):
@@ -25,17 +65,24 @@ class NeoTiles:
     def tile_handlers(self):
         return [tile['handler'] for tile in self._tiles]
 
-    def data(self, in_data):
-        for tile in self._tiles:
-            tile.handler.data(in_data)
+    def _normalized_to_display_color(self, normalized):
+        return tuple([int(i * self._max_intensity) for i in normalized])
 
-    def draw(self):
-        # Create a 2D matrix representing the entire pixel matrix, made up of
-        # each of the individual tiles.
-
-        # Init the matrix to black.
+    def _genenerate_black_matrix(self):
+        # TODO: rethink this vs. the clear() method
         matrix = [[(0, 0, 0) for col in range(self._size[0])]
                   for row in range(self._size[1])]
+
+        return matrix
+
+    def _generate_matrix(self):
+        """
+        Create a 2D matrix representing the entire pixel matrix, made up of
+        each of the individual tiles.
+
+        :return:
+        """
+        matrix = self._genenerate_black_matrix()
 
         # Set the matrix pixels to the colors of each tile in turn.  If any
         # tiles happen to overlap then the last one processed will win.
@@ -48,97 +95,72 @@ class NeoTiles:
                     matrix_col = tile['root'][0] + tile_col_num
                     matrix[matrix_row][matrix_col] = pixel_color
 
+        return matrix
+
+    def register_tile(self, size=None, root=None, handler=None):
+        """
+
+        :param size:
+        :param root:
+        :param handler:
+        :return:
+        """
+        # TODO: Consider making _tiles an ordered dict; or a different
+        #   structure that allows for removal and insertion.
+        handler.size = size
+
+        self._tiles.append({
+            'size': size,
+            'root': root,
+            'handler': handler,
+        })
+
+    def data(self, in_data):
+        """
+
+        :param in_data:
+        :return:
+        """
+        for tile in self._tiles:
+            tile.handler.data(in_data)
+
+    def draw(self):
+        """
+
+        :return:
+        """
+        matrix = self._generate_matrix()
+
         # Walk through the matrix from the top left to the bottom right,
         # painting pixels as we go.
         pixel_num = 0
         for row_num in range(len(matrix)):
             for col_num in range(len(matrix[row_num])):
                 color = matrix[row_num][col_num]
-                print('[{:2d}] : {:7.3f}, {:7.3f}, {:7.3f}  '.format(
-                    pixel_num, color[0], color[1], color[2]), end='')
+
+                color_display = self._normalized_to_display_color(color)
+                print('{:-2d}: {:.3f} {:.3f} {:.3f} -> {:-3d} {:-3d} {:-3d}'.format(
+                    pixel_num,
+                    color[0], color[1], color[2],
+                    color_display[0], color_display[1], color_display[2]
+                ))
+
+                #self.hardware_matrix.setPixelColorRGB(
+                #    pixel_num, *self._normalized_to_display_color(color))
+                self.hardware_matrix.setPixelColorRGB(
+                    pixel_num, color_display[0], color_display[1], color_display[2])
                 pixel_num += 1
 
-            print()
+        print()
+        self.hardware_matrix.show()
 
+    def clear(self):
+        """
 
-# ----------------------------------------------------------------------------
-class TileHandler:
-    # TODO: replace size getter with num_cols and num_rows
-    def __init__(self, size=None):
-        self._data = None
-        self._default_color = (
-            random.random(), random.random(), random.random())
+        :return:
+        """
+        for pixel_num in range(self._led_count):
+            self.hardware_matrix.setPixelColor(pixel_num, 0)
 
-        # Set tile size as a tuple of (cols, rows)
-        if size is None:
-            self._size = (1, 1)
-        else:
-            self.size = size
+        self.hardware_matrix.show()
 
-        self._pixels = [[]]
-        self._init_pixels()
-
-    def _init_pixels(self):
-        # A two-dimension array of pixel colors for the tile.
-        self._pixels = [
-            [self._default_color for col in range(self._size[0])]
-            for row in range(self._size[1])
-        ]
-
-    def data(self, in_data):
-        self._data = in_data
-
-    @property
-    def size(self):
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        if not type(value) is tuple or len(value) != 2:
-            raise ValueError('size must be a tuple of (cols, rows)')
-
-        self._size = value
-        self._init_pixels()
-
-    def set_pixel(self, pos, color):
-        if not type(pos) is tuple or len(pos) != 2:
-            raise ValueError('pos must be a tuple of (col, row)')
-
-        # pos[0] is the column index and pos[1] is the row index.  Our pixel
-        # matrix is indexed by row number first, then column within the row.
-        self._pixels[pos[1]][pos[0]] = color
-
-    @property
-    def pixels(self):
-        return self._pixels
-
-
-# ----------------------------------------------------------------------------
-class PacketCountHandler(TileHandler):
-    def __init__(self, protocol='TCP'):
-        super().__init__()
-        self._protocol = protocol
-
-    def data(self, in_data):
-        packet_count = 0
-
-        try:
-            packet_count = in_data['payload']['packet_counts'][self._protocol]
-        except KeyError as e:
-            logging.warning('protocol {} not found in data: {}'.format(
-                self._protocol, e))
-            return
-
-
-if __name__ == '__main__':
-    #tcp_packets = PacketCountHandler(protocol='TCP')
-    #udp_packets = PacketCountHandler(protocol='UDP')
-    tcp_packets = TileHandler()
-    udp_packets = TileHandler()
-
-    tiles = NeoTiles(size=(3, 7))
-
-    tiles.register_tile(size=(2, 7), root=(0, 0), handler=tcp_packets)
-    tiles.register_tile(size=(1, 7), root=(2, 0), handler=udp_packets)
-
-    tiles.draw()

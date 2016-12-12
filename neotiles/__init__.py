@@ -1,1 +1,2 @@
-from .neotiles import NeoTiles, TileHandler
+from .neotiles import NeoTiles
+from .tilehandler import TileHandler

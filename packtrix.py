@@ -92,15 +92,20 @@ class Packtrix:
         )
 
         tcp_intensity = PacketCountIntensityTile(
-            protocol='TCP', max_color=(255, 0, 0))
+            protocol='TCP', max_color=(1, 0, 0))
         udp_intensity = PacketCountIntensityTile(
-            protocol='IPv6', max_color=(0, 255, 0))
+            protocol='IPv6', max_color=(0, 1, 0))
+        ip6_intensity = PacketCountIntensityTile(
+            protocol='IPv6', max_color=(0, 0, 1))
 
-        self.neotiles = NeoTiles(size=(3, 7))
+        self.neotiles = NeoTiles(size=(8, 8))
+        print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
-            size=(2, 7), root=(0, 0), handler=tcp_intensity)
+            size=(8, 4), root=(0, 0), handler=tcp_intensity)
         self.neotiles.register_tile(
-            size=(1, 7), root=(2, 0), handler=udp_intensity)
+            size=(8, 2), root=(0, 4), handler=udp_intensity)
+        self.neotiles.register_tile(
+            size=(8, 2), root=(0, 6), handler=ip6_intensity)
 
     async def on_dumpling(self, dumpling):
         """
@@ -112,7 +117,7 @@ class Packtrix:
             tile_handler.data(dumpling)
 
         self.neotiles.draw()
-        print('')
+        print('{}\n'.format(self.neotiles))
 
     def run(self):
         """
@@ -121,14 +126,21 @@ class Packtrix:
         """
         self.dumpling_eater.run()
 
+    def clear(self):
+        self.neotiles.clear()
+
 
 def main():
     packtrix = Packtrix()
+
     packtrix.run()
+    packtrix.clear()
 
 
 # =============================================================================
 
 if __name__ == '__main__':
     main()
+
+
 
