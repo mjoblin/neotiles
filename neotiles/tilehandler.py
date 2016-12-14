@@ -9,16 +9,21 @@ class TileHandler:
     Handles the data processing and pixel display for a single tile.
 
     This class by default displays a random color inside the tile and ignores
-    any incoming data on the :attr:`~data` property.  This class will normally
-    be subclassed to implement more useful data-based pixel coloring.
+    any incoming data on the :attr:`~data` property.
 
-    Tiles are assigned a ``size`` from the :class:`NeoTiles` object that
-    they're registered with (see :meth:`NeoTiles.register_tile`).  Tiles
+    **This class will normally be subclassed to implement more useful
+    data-based pixel coloring.**  Subclasses will usually override the
+    :meth:`data` method to process the incoming data and then call the
+    :meth:`set_pixel` method on each pixel in the tile.
+
+    Tiles are assigned a :attr:`size` from the :class:`~NeoTiles` object that
+    they're registered with (see :meth:`~NeoTiles.register_tile`).  Tiles
     are responsible for determining the color of each of their pixels (usually
     based on incoming :meth:`data` which is also provided by the NeoTiles
     object they're registered with).
 
-    :param default_color: (:class:`TileColor`) Default color for the tile.
+    :param default_color: (:class:`TileColor`) Default color for all pixels in
+        the tile.
     """
     def __init__(self, default_color=None):
         self._default_color = TileColor(
@@ -50,23 +55,14 @@ class TileHandler:
         ]
 
     @property
-    def data(self):
-        """
-        The most recent data.
-        """
-        return self._data
-
-    @data.setter
-    def data(self, in_data):
-        """
-        Sets the data.
-
-        :param in_data: (all) The data.
-        """
-        self._data = in_data
-
-    @property
     def default_color(self):
+        """
+        The default color for the tile.  This is usually ignored, assuming the
+        tile is painting its own pixel colors.
+
+        :getter: (:class:`~TileColor`) Returns the default tile color.
+        :setter: (:class:`~TileColor`) Sets the default tile color.
+        """
         return self._default_color
 
     @default_color.setter
@@ -75,10 +71,25 @@ class TileHandler:
 
     @property
     def pixels(self):
+        """
+        A two-dimensional list which contains the color of each neopixel in the
+        tile.
+
+        :getter: ([[:class:`~TileColor`]]) Returns a two-dimensional list of
+            tile pixel colors.
+        """
         return self._pixels
 
     @property
     def size(self):
+        """
+        The size of the tile (in columns and rows).
+
+        :getter: (:class:`~TileSize`) Returns the size of the tile.
+        :setter: (:class:`~TileSize`) Sets the size of the tile.  This will be
+            set automatically by the :class:`~NeoTiles` object the tile is
+            registered with.
+        """
         return self._size
 
     @size.setter
@@ -91,6 +102,16 @@ class TileHandler:
         Clears the tile (sets all pixels to ``TileColor(0, 0, 0, 0)``).
         """
         self._init_pixels(color=TileColor(0, 0, 0, 0))
+
+    def data(self, in_data):
+        """
+        Sends new data to the tile.
+
+        :param in_data: (all) Sets the data associated with the tile.  This
+            will be called automatically by the :class:`~NeoTiles` object the
+            tile is registered with.
+        """
+        self._data = in_data
 
     def set_pixel(self, pos, color):
         """

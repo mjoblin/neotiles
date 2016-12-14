@@ -1,6 +1,7 @@
 class TileColor:
+    # TODO: Rename to NPColor.
     """
-    Represents a single tile pixel color.
+    Represents a single neopixel color.
 
     The ``red``, ``blue``, ``green``, and ``white`` components can either be
     between 0 and 1 (normalized), or between 0 and 255.  TileColor will attempt

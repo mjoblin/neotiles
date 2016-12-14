@@ -1,0 +1,4 @@
+Examples
+========
+
+Color-block clock

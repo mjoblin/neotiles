@@ -10,28 +10,12 @@ TileSize = namedtuple('TileSize', 'cols rows')
 
 
 class NeoTiles:
+    # TODO: Rename to TileManager?
     """
-    Manages all the tiles being displayed in a neopixel matrix.
+    Manages all the tiles displayed in a neopixel matrix.
 
-    Example usage (an 8x2 tile on top of an 8x6 tile): ::
-
-        from neotiles import NeoTiles, TileHandler
-
-        tiles = NeoTiles(size=(8, 8))
-
-        tiles.register_tile(
-            size=(8, 2), root=(0, 0), handler=TileHandler())
-        tiles.register_tile(
-            size=(8, 6), root=(2, 0), handler=TileHandler())
-
-        # Display the pixel values on the neopixel matrix.
-        tiles.draw()
-
-        # Display the pixel values in the console.
-        print(tiles)
-
-    :param size: (:class:`TileSize`) Size (as the number of columns and rows)
-        of the neopixel matrix.
+    :param size: (:class:`TileSize`) Size (in columns and rows) of the neopixel
+        matrix.
     :param intensity: (float) Intensity of the matrix display.  0.5 will
         display all pixels at half intensity of whatever the tile handlers
         are setting each pixel to.
@@ -174,7 +158,7 @@ class NeoTiles:
         Takes the ``in_data`` and sends it to all the registered tiles.
 
         All tiles which receive the incoming data are expected to set their
-        pixel colors appropriately.
+        own pixel colors based on the data contents.
 
         :param in_data: (any) Input data.
         """
@@ -183,7 +167,8 @@ class NeoTiles:
 
     def draw(self):
         """
-        Displays the current pixel values of all tiles on the neopixel matrix.
+        Retrieves the the current pixel colors of all tiles and displays them
+        on the neopixel matrix.
         """
         matrix = self._generate_matrix()
 
@@ -201,7 +186,8 @@ class NeoTiles:
 
     def clear(self, show=True):
         """
-        Clears the matrix (sets all pixels to ``TileColor(0, 0, 0, 0)``).
+        Clears the neopixel matrix (sets all pixels to
+        ``TileColor(0, 0, 0, 0)``).
 
         :param show: (bool) Whether to draw the cleared pixels to the
             neopixel matrix.
