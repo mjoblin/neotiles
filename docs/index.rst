@@ -52,10 +52,10 @@ mini-matrix of pixels always starting at (0, 0):
 
 All you need to do is:
 
-* Create a :class:`~TileManager` object and give it the size of the matrix.
+* Create a :class:`~TileManager` object and give it the size of your matrix.
 * Create your own subclass of :class:`~TileHandler` and implement the :meth:`~TileHandler.data` method, which receives incoming data and sets pixel colors appropriately.
 * Register your TileHandler subclass instances with the TileManager object.
-* Send data to the TileManager object.
+* Send data to the TileManager object.  The data can be anything in any format, so long as your TileHandlers know how to interpret it.
 * Watch the neopixel matrix display the results.  Taco earned.
 
 Example
