@@ -9,10 +9,10 @@ virtual tiles for independent rendering based on input data.
 A neopixel matrix contains RGB(W) LED pixels.  Here's what one looks like:
 
 .. image:: _static/adafruit_8x8_blank.jpg
-    :width: 45 %
+   :width: 45 %
 
 .. image:: _static/adafruit_8x8_color.jpg
-    :width: 45 %
+   :width: 45 %
 
 neotiles has been tested on a Raspberry Pi 3 with the above 8x8 neopixel RGB
 matrix and Python 3.4.  It would be surprising if it worked on
@@ -72,15 +72,15 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
 
     # Create three tile handlers.  Handlers are told their dimensions
     # later.
-    red_handler = TileHandler(default_color=TileColor(255, 0, 0))
-    grn_handler = TileHandler(default_color=TileColor(0, 255, 0))
-    blu_handler = TileHandler(default_color=TileColor(0, 0, 255))
+    red_handler = TileHandler(default_color=TileColor(128, 0, 0))
+    grn_handler = TileHandler(default_color=TileColor(0, 128, 0))
+    blu_handler = TileHandler(default_color=TileColor(0, 0, 128))
 
     # Assign the 3 tile handlers to the matrix.  This is when the
     # tiles will be given their dimensions.
     tiles.register_tile(size=(4, 4), root=(0, 0), handler=red_handler)
     tiles.register_tile(size=(4, 4), root=(4, 0), handler=grn_handler)
-    tiles.register_tile(size=(8, 6), root=(0, 4), handler=blu_handler)
+    tiles.register_tile(size=(8, 4), root=(0, 4), handler=blu_handler)
 
     # Display each tile's pixel colors on the neopixel matrix.
     tiles.draw()

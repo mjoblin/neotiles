@@ -38,7 +38,7 @@ class PacketCountIntensityTile(TileHandler):
         :param max_color:
         :param avg_intensity:
         """
-        super().__init__()
+        super().__init__(default_color=TileColor(0, 0, 0))
         self.clear()
 
         self._protocol = protocol
@@ -55,6 +55,8 @@ class PacketCountIntensityTile(TileHandler):
         :param in_data:
         :return:
         """
+        super().data(in_data)
+
         packet_count = in_data['payload']['packet_counts'][self._protocol]
 
         if self._last_count > -1:

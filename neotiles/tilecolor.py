@@ -1,4 +1,5 @@
 class TileColor:
+    # TODO: Add __repr__ and __str__
     # TODO: Rename to NPColor.
     """
     Represents a single neopixel color.

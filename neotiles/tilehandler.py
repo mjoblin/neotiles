@@ -34,11 +34,13 @@ class TileHandler:
         )
 
         if default_color:
-            self.default_color = TileColor(*default_color)
+            self.default_color = default_color
 
-        self._size = TileSize(1, 1)
+        self._size = None
+        self._pixels = None
         self._data = None
-        self._init_pixels()
+
+        self.size = TileSize(1, 1)
 
     def _init_pixels(self, color=None):
         """
@@ -67,7 +69,7 @@ class TileHandler:
 
     @default_color.setter
     def default_color(self, color):
-        self._default_color = TileColor(*color)
+        self._default_color = color
 
     @property
     def pixels(self):
@@ -107,9 +109,14 @@ class TileHandler:
         """
         Sends new data to the tile.
 
-        :param in_data: (all) Sets the data associated with the tile.  This
-            will be called automatically by the :class:`~NeoTiles` object the
-            tile is registered with.
+        This method can either be called manually, or will be called
+        automatically via the :meth:`NeoTiles.data` method on the
+        :class:`NeoTiles` object the tile is registered with.
+
+        The value of ``in_data`` can be anything, so long as the TileHandler
+        object knows how to interpret it.
+
+        :param in_data: (all) The data to send to the tile.
         """
         self._data = in_data
 
@@ -122,6 +129,8 @@ class TileHandler:
         """
         # Our pixel matrix is indexed by row number first, then column within
         # the row.
+        # TODO: Overloading the meaning of TilePosition here (position of
+        #   tile on matrix vs. position of pixel in tile)
         pos = TilePosition(*pos)
         self._pixels[pos.y][pos.x] = color
 
