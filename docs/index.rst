@@ -6,6 +6,17 @@ neotiles
 A Python library which allows you to split a `neopixel matrix`_ into multiple
 virtual tiles for independent rendering based on input data.
 
+More information
+----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   pages/installation
+   pages/api
+   pages/examples
+
+
 A neopixel matrix contains RGB(W) LED pixels.  Here's what one looks like:
 
 .. image:: _static/adafruit_8x8_blank.jpg
@@ -18,8 +29,8 @@ neotiles has been tested on a Raspberry Pi 3 with the above 8x8 neopixel RGB
 matrix and Python 3.4.  It would be surprising if it worked on
 micropython-based hardware.
 
-What it does
-------------
+What neotiles does
+------------------
 
 Normally you control all the pixels in a neopixel matrix via their unique pixel
 number, like this:
@@ -90,16 +101,5 @@ This example relies on the default TileHandler class's ``default_color``
 parameter to set its color.  Normally you'll write your own subclass of
 TileHandler which will (via your override of the data() method) set the tile's
 pixels to more interesting colors.
-
-More information
-----------------
-
-.. toctree::
-   :maxdepth: 1
-
-   pages/installation
-   pages/api
-   pages/examples
-
 
 .. _neopixel matrix: https://www.adafruit.com/?q=neopixel%20matrix

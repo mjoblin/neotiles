@@ -14,6 +14,7 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 
 # TODO: Consider moving animate() to animate=True on constructor
 # TODO: Support RGB and RGBW
+# TODO: Check Python 2.7
 
 
 class TileManager:
@@ -45,6 +46,8 @@ class TileManager:
     :param led_brightness: (int) LED brightness.
     :param led_invert: (bool) Whether to invert the LEDs.
     :param strip_type: (int) Neopixel strip type.
+    :raises: :class:`NeoTilesError` if ``size`` or ``led_pin`` are not
+        specified.
     """
     def __init__(
             self, size=None, led_pin=None, intensity=1.0, led_freq_hz=800000,
@@ -146,6 +149,8 @@ class TileManager:
         each of the individual tiles' colors for each tile pixel.
 
         :return: ([[matrix]]) 2D list of :class:`NPColor` objects.
+        :raises: :class:`NeoTilesError` if an attempt is made to render a
+            pixel outside of the neopixel matrix's dimensions.
         """
         matrix = self._generate_empty_matrix()
 
@@ -174,6 +179,9 @@ class TileManager:
     def intensity(self):
         """
         The intensity (between 0 and 1) of the matrix display.  Read/write.
+
+        :raises: :class:`NeoTilesError` if an attempt is made to set an
+            intensity outside of 0 and 1.
         """
         return self._intensity
 
@@ -286,6 +294,9 @@ class TileManager:
         """
         Retrieves the the current pixel colors of all tiles and displays them
         on the neopixel matrix.
+
+        :raises: :class:`NeoTilesError` if an attempt is made to render a
+            pixel outside of the neopixel matrix's dimensions.
         """
         matrix = self._generate_matrix()
 

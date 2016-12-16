@@ -11,7 +11,9 @@ also accept a plain tuple as input so long as the element order is the same.
 * :class:`~TileHandler` - Handles the data and pixel-coloring needs of a single tile.
 * :class:`~TilePosition` - The position of a tile inside the larger neopixel matrix.
 * :class:`~TileSize` - The size of a tile (in cols and rows).
+* :class:`~PixelPosition` - The position of a neopixel inside a tile.
 * :class:`~NPColor` - The color of a single neopixel.
+* :class:`~NeoTilesError` - Exception raised when neotiles encounters a problem.
 
 TileManager
 -----------
@@ -37,9 +39,21 @@ TileSize
 .. autoclass:: TileSize
    :members:
 
+PixelPosition
+-------------
+
+.. autoclass:: PixelPosition
+   :members:
+
 NPColor
 -------
 
 .. autoclass:: NPColor
+   :members:
+
+NeoTilesError
+-------------
+
+.. autoclass:: NeoTilesError
    :members:
 
