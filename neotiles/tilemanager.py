@@ -4,15 +4,14 @@ import time
 
 from neopixel import Adafruit_NeoPixel, Color, ws
 
-from .tilecolor import TileColor
+from .npcolor import NPColor
 
 
 TilePosition = namedtuple('TilePosition', 'x y')
 TileSize = namedtuple('TileSize', 'cols rows')
 
 
-class NeoTiles:
-    # TODO: Rename to TileManager?
+class TileManager:
     """
     Manages all the tiles displayed in a neopixel matrix.
 
@@ -77,7 +76,7 @@ class NeoTiles:
 
     def _generate_empty_matrix(self):
         matrix = [
-            [TileColor(0, 0, 0) for col in range(self._size.cols)]
+            [NPColor(0, 0, 0) for col in range(self._size.cols)]
             for row in range(self._size.rows)
         ]
 
@@ -176,7 +175,7 @@ class NeoTiles:
 
         The animation loop assumes that something else will be sending data to
         the tile handlers (via the :meth:`TileHandler.data` or
-        :meth:`NeoTiles.data` methods), which are then updating their
+        :meth:`TileManager.data` methods), which are then updating their
         pixel colors.  If that isn't happening then the animation loop will
         likely keep re-drawing the matrix with the same pixel colors.
 
@@ -190,7 +189,7 @@ class NeoTiles:
     def clear(self, show=True):
         """
         Clears the neopixel matrix (sets all pixels to
-        ``TileColor(0, 0, 0, 0)``).
+        ``NPColor(0, 0, 0, 0)``).
 
         :param show: (bool) Whether to draw the cleared pixels to the
             neopixel matrix.

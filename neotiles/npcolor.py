@@ -1,15 +1,14 @@
-class TileColor:
+class NPColor:
     # TODO: Add __repr__ and __str__
-    # TODO: Rename to NPColor.
     """
     Represents a single neopixel color.
 
     The ``red``, ``blue``, ``green``, and ``white`` components can either be
-    between 0 and 1 (normalized), or between 0 and 255.  TileColor will attempt
+    between 0 and 1 (normalized), or between 0 and 255.  NPColor will attempt
     to determine automatically whether the components are normalized, but this
     can be forced with ``normalized`` (setting ``normalized=True`` will not
     force the components to be between 0 and 1, but will instead force
-    TileColor to assume that they are).
+    NPColor to assume that they are).
 
     The ``white`` component will only have an effect on neopixels which
     support RGBW.

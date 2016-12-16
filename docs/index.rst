@@ -66,16 +66,16 @@ Below is a simple example which takes an 8x8 matrix and renders (without input
 data or animation) three tiles inside of it: a top-left 4x4 tile (in red), a
 top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
 
-    from neotiles import NeoTiles, TileColor, TileHandler
+    from neotiles import TileManager, TileHandler, NPColor
 
     # Initialize an 8x8 matrix.
-    tiles = NeoTiles(size=(8, 8))
+    tiles = TileManager(size=(8, 8))
 
     # Create three tile handlers.  Handlers are told their dimensions
     # later.
-    red_handler = TileHandler(default_color=TileColor(128, 0, 0))
-    grn_handler = TileHandler(default_color=TileColor(0, 128, 0))
-    blu_handler = TileHandler(default_color=TileColor(0, 0, 128))
+    red_handler = TileHandler(default_color=NPColor(128, 0, 0))
+    grn_handler = TileHandler(default_color=NPColor(0, 128, 0))
+    blu_handler = TileHandler(default_color=NPColor(0, 0, 128))
 
     # Assign the 3 tile handlers to the matrix.  This is when the
     # tiles will be given their dimensions.

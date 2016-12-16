@@ -7,43 +7,22 @@ The following classes are exposed by the API.  Note that methods and properties
 which expect a :class:`~TilePosition` or :class:`~TileSize` as input will
 also accept a plain tuple as input so long as the element order is the same.
 
-* :class:`~NeoTiles` - Manages all the tiles in a neopixel matrix.
-* :class:`~TileHandler` - Manages a single tile.
-* :class:`~TileColor` - Color of a pixel.
-* :class:`~TilePosition` - Position of a tile.
-* :class:`~TileSize` - Size of a tile (in cols and rows).
+* :class:`~TileManager` - Manages all the tiles being displayed on a neopixel matrix.
+* :class:`~TileHandler` - Handles the data and pixel-coloring needs of a single tile.
+* :class:`~TilePosition` - The position of a tile inside the larger neopixel matrix.
+* :class:`~TileSize` - The size of a tile (in cols and rows).
+* :class:`~NPColor` - The color of a single neopixel.
 
-Example usage (an 8x2 tile on top of an 8x6 tile): ::
+TileManager
+-----------
 
-    from neotiles import NeoTiles, TileHandler
-
-    tiles = NeoTiles(size=(8, 8))
-
-    tiles.register_tile(size=(8, 2), root=(0, 0), handler=TileHandler())
-    tiles.register_tile(size=(8, 6), root=(2, 0), handler=TileHandler())
-
-    # Display the pixel colors on the neopixel matrix.
-    tiles.draw()
-
-    # Display the pixel color values in the console.
-    print(tiles)
-
-NeoTiles
---------
-
-.. autoclass:: NeoTiles
+.. autoclass:: TileManager
    :members:
 
 TileHandler
 -----------
 
 .. autoclass:: TileHandler
-   :members:
-
-TileColor
----------
-
-.. autoclass:: TileColor
    :members:
 
 TilePosition
@@ -57,3 +36,10 @@ TileSize
 
 .. autoclass:: TileSize
    :members:
+
+NPColor
+-------
+
+.. autoclass:: NPColor
+   :members:
+

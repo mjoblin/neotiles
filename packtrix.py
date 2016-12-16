@@ -2,7 +2,7 @@
 
 from collections import deque
 
-from neotiles import NeoTiles, TileColor, TileHandler, TilePosition, TileSize
+from neotiles import TileManager, NPColor, TileHandler, TilePosition, TileSize
 from netdumplings import DumplingEater
 
 
@@ -38,7 +38,7 @@ class PacketCountIntensityTile(TileHandler):
         :param max_color:
         :param avg_intensity:
         """
-        super().__init__(default_color=TileColor(0, 0, 0))
+        super().__init__(default_color=NPColor(0, 0, 0))
         self.clear()
 
         self._protocol = protocol
@@ -83,7 +83,7 @@ class PacketCountIntensityTile(TileHandler):
                      for val in self._max_color.rgbw_denormalized]
                 )
                 self.set_pixel(
-                    TilePosition(col, row), TileColor(*display_color))
+                    TilePosition(col, row), NPColor(*display_color))
 
 
 class Packtrix:
@@ -98,13 +98,13 @@ class Packtrix:
         )
 
         tcp_intensity = PacketCountIntensityTile(
-            protocol='TCP', max_color=TileColor(1, 0, 0))
+            protocol='TCP', max_color=NPColor(1, 0, 0))
         udp_intensity = PacketCountIntensityTile(
-            protocol='IPv6', max_color=TileColor(0, 1, 0))
+            protocol='IPv6', max_color=NPColor(0, 1, 0))
         ip6_intensity = PacketCountIntensityTile(
-            protocol='IPv6', max_color=TileColor(0, 0, 1))
+            protocol='IPv6', max_color=NPColor(0, 0, 1))
 
-        self.neotiles = NeoTiles(size=(8, 8))
+        self.neotiles = TileManager(size=(8, 8))
         print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
             size=TileSize(8, 4), root=TilePosition(0, 0), handler=tcp_intensity)

@@ -1,7 +1,7 @@
 import random
 
-from .tilecolor import TileColor
-from .neotiles import TileSize, TilePosition
+from .npcolor import NPColor
+from .tilemanager import TileSize, TilePosition
 
 
 class TileHandler:
@@ -16,17 +16,17 @@ class TileHandler:
     :meth:`data` method to process the incoming data and then call the
     :meth:`set_pixel` method on each pixel in the tile.
 
-    Tiles are assigned a :attr:`size` from the :class:`~NeoTiles` object that
-    they're registered with (see :meth:`~NeoTiles.register_tile`).  Tiles
+    Tiles are assigned a :attr:`size` from the :class:`~TileManager` object that
+    they're registered with (see :meth:`~TileManager.register_tile`).  Tiles
     are responsible for determining the color of each of their pixels (usually
-    based on incoming :meth:`data` which is also provided by the NeoTiles
+    based on incoming :meth:`data` which is also provided by the TileManager
     object they're registered with).
 
-    :param default_color: (:class:`TileColor`) Default color for all pixels in
+    :param default_color: (:class:`NPColor`) Default color for all pixels in
         the tile.
     """
     def __init__(self, default_color=None):
-        self._default_color = TileColor(
+        self._default_color = NPColor(
             red=random.random(),
             green=random.random(),
             blue=random.random(),
@@ -46,7 +46,7 @@ class TileHandler:
         """
         Initialize all pixels in the tile to the given ``color``.
 
-        :param color: (:class:`TileColor`) Color to initialize the pixels to.
+        :param color: (:class:`NPColor`) Color to initialize the pixels to.
         """
         # A two-dimension array of pixel colors for the tile.
         display_color = self._default_color if color is None else color
@@ -62,8 +62,8 @@ class TileHandler:
         The default color for the tile.  This is usually ignored, assuming the
         tile is painting its own pixel colors.
 
-        :getter: (:class:`~TileColor`) Returns the default tile color.
-        :setter: (:class:`~TileColor`) Sets the default tile color.
+        :getter: (:class:`~NPColor`) Returns the default tile color.
+        :setter: (:class:`~NPColor`) Sets the default tile color.
         """
         return self._default_color
 
@@ -77,7 +77,7 @@ class TileHandler:
         A two-dimensional list which contains the color of each neopixel in the
         tile.
 
-        :getter: ([[:class:`~TileColor`]]) Returns a two-dimensional list of
+        :getter: ([[:class:`~NPColor`]]) Returns a two-dimensional list of
             tile pixel colors.
         """
         return self._pixels
@@ -89,7 +89,7 @@ class TileHandler:
 
         :getter: (:class:`~TileSize`) Returns the size of the tile.
         :setter: (:class:`~TileSize`) Sets the size of the tile.  This will be
-            set automatically by the :class:`~NeoTiles` object the tile is
+            set automatically by the :class:`~TileManager` object the tile is
             registered with.
         """
         return self._size
@@ -101,17 +101,17 @@ class TileHandler:
 
     def clear(self):
         """
-        Clears the tile (sets all pixels to ``TileColor(0, 0, 0, 0)``).
+        Clears the tile (sets all pixels to ``NPColor(0, 0, 0, 0)``).
         """
-        self._init_pixels(color=TileColor(0, 0, 0, 0))
+        self._init_pixels(color=NPColor(0, 0, 0, 0))
 
     def data(self, in_data):
         """
         Sends new data to the tile.
 
         This method can either be called manually, or will be called
-        automatically via the :meth:`NeoTiles.data` method on the
-        :class:`NeoTiles` object the tile is registered with.
+        automatically via the :meth:`TileManager.data` method on the
+        :class:`TileManager` object the tile is registered with.
 
         The value of ``in_data`` can be anything, so long as the TileHandler
         object knows how to interpret it.
@@ -125,7 +125,7 @@ class TileHandler:
         Sets the pixel at the given ``pos`` to the given ``color``.
 
         :param pos: (:class:`~TilePosition`) Pixel to set the color of.
-        :param color: (:class:`~TileColor`) Color to assign.
+        :param color: (:class:`~NPColor`) Color to assign.
         """
         # Our pixel matrix is indexed by row number first, then column within
         # the row.

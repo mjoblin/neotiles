@@ -1,3 +1,3 @@
-from .neotiles import NeoTiles, TilePosition, TileSize
-from .tilecolor import TileColor
+from .tilemanager import TileManager, TilePosition, TileSize
+from .npcolor import NPColor
 from .tilehandler import TileHandler
