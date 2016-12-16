@@ -4,29 +4,65 @@ import time
 
 from neopixel import Adafruit_NeoPixel, Color, ws
 
+from .exceptions import NeoTilesError
 from .npcolor import NPColor
 
 
 TilePosition = namedtuple('TilePosition', 'x y')
 TileSize = namedtuple('TileSize', 'cols rows')
+PixelPosition = namedtuple('PixelPosition', 'x y')
+
+# TODO: Consider moving animate() to animate=True on constructor
+# TODO: Support RGB and RGBW
 
 
 class TileManager:
     """
     Manages all the tiles displayed in a neopixel matrix.
 
+    You must specify ``size`` and ``led_pin``.  The other parameters can
+    usually be left at their defaults.  For more information on the other
+    parameters look at the ``Adafruit_NeoPixel`` class in the ``neopixel``
+    module.
+
+    If your RGB values appear to be mixed up (for example, red is showing as
+    green) then try using a different ``strip_type``.  You can see a list of
+    valid strip type constants here (look for ``_STRIP_`` in the constant name):
+    https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html
+
+    Specify a strip type like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For
+    this to work you'll need to ``import ws`` (which comes with the ``neopixel``
+    module) into your code.
+
     :param size: (:class:`TileSize`) Size (in columns and rows) of the neopixel
         matrix.
+    :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
     :param intensity: (float) Intensity of the matrix display.  0.5 will
         display all pixels at half intensity of whatever the tile handlers
         are setting each pixel to.
+    :param led_freq_hz: (int) LED frequency.
+    :param led_dma: (int) LED DMA.
+    :param led_brightness: (int) LED brightness.
+    :param led_invert: (bool) Whether to invert the LEDs.
+    :param strip_type: (int) Neopixel strip type.
     """
-    def __init__(self, size=None, intensity=1.0):
-        if size is None:
-            raise ValueError('size must be specified')
+    def __init__(
+            self, size=None, led_pin=None, intensity=1.0, led_freq_hz=800000,
+            led_dma=5, led_brightness=8, led_invert=False,
+            strip_type=ws.WS2811_STRIP_GRB):
+
+        if size is None or led_pin is None:
+            raise NeoTilesError('size and led_pin must be specified')
 
         self._size = TileSize(*size)
+        self._led_pin = led_pin
         self._intensity = intensity
+        self._led_freq_hz = led_freq_hz
+        self._led_dma = led_dma
+        self._led_brightness = led_brightness
+        self._led_invert = led_invert
+        self._strip_type = strip_type
+
         self._led_count = self._size.cols * self._size.rows
         self._animation_thread = None
 
@@ -34,24 +70,31 @@ class TileManager:
         self._tiles = []
 
         # Initialize the matrix.
-        # TODO: Make these accessible from constructor.
-        led_pin = 18
-        led_freq_hz = 800000
-        led_dma = 5
-        led_brightness = 8
-        led_invert = False
-        strip_type = ws.WS2811_STRIP_GRB
-
         self.hardware_matrix = Adafruit_NeoPixel(
-            self._led_count, led_pin, freq_hz=led_freq_hz, dma=led_dma,
-            invert=led_invert, brightness=led_brightness, strip_type=strip_type
+            self._led_count, self._led_pin, freq_hz=self._led_freq_hz,
+            dma=self._led_dma, invert=self._led_invert,
+            brightness=self._led_brightness, strip_type=self._strip_type
         )
 
         self.hardware_matrix.begin()
 
     def __repr__(self):
-        return '<{}(size=({}, {}))>'.format(
-            self.__class__.__name__, self._size.cols, self._size.rows)
+        strip_name = self._strip_type
+
+        # Convert strip name from strip type integer to associated attribute
+        # name from ws module (if we can find it).
+        for strip_check in [attr for attr in dir(ws) if '_STRIP_' in attr]:
+            if getattr(ws, strip_check) == self._strip_type:
+                strip_name = 'ws.{}'.format(strip_check)
+
+        return (
+            '{}(size={}, led_pin={}, intensity={}, led_freq_hz={}, led_dma={}, '
+            'led_brightness={}, led_invert={}, strip_type={})'
+        ).format(
+            self.__class__.__name__, self._size, self._led_pin, self._intensity,
+            self._led_freq_hz, self._led_dma, self._led_brightness,
+            self._led_invert, strip_name
+        )
 
     def __str__(self):
         matrix = self._generate_matrix()
@@ -71,10 +114,25 @@ class TileManager:
         return matrix_string.rstrip()
 
     def _display_color(self, color):
+        """
+        Convert a pixel color coming from a tile to a color for display on the
+        matrix.  This involves multiplying the color by the desired matrix
+        intensity.
+
+        :param color: (:class:`NPColor`) The pixel color from the tile.
+        :return: (tuple(r, g, b)) Color values for display on the matrix.
+        """
         # TODO: Allow for RGBW
         return tuple([int(i * self.intensity) for i in color.rgb_denormalized])
 
     def _generate_empty_matrix(self):
+        """
+        Generate a 2D matrix for the given size of the neopixel matrix where
+        all the pixels are set to off (0, 0, 0).
+
+        :return: ([[:class:`NPColor`]]) 2D matrix of NPColor objects all set
+            to (0, 0, 0).
+        """
         matrix = [
             [NPColor(0, 0, 0) for col in range(self._size.cols)]
             for row in range(self._size.rows)
@@ -85,9 +143,9 @@ class TileManager:
     def _generate_matrix(self):
         """
         Create a 2D matrix representing the entire pixel matrix, made up of
-        each of the individual tiles.
+        each of the individual tiles' colors for each tile pixel.
 
-        :return: ()
+        :return: ([[matrix]]) 2D list of :class:`NPColor` objects.
         """
         matrix = self._generate_empty_matrix()
 
@@ -100,8 +158,16 @@ class TileManager:
                     pixel_color = tile_matrix[tile_row_num][tile_col_num]
                     matrix_row = tile['root'].y + tile_row_num
                     matrix_col = tile['root'].x + tile_col_num
-                    matrix[matrix_row][matrix_col] = pixel_color
 
+                    try:
+                        matrix[matrix_row][matrix_col] = pixel_color
+                    except IndexError as e:
+                        raise NeoTilesError(
+                            'Cannot render tile {}: pixel position ({}, {}) '
+                            'is invalid for {}x{} matrix'.format(
+                                tile, matrix_col, matrix_row, self._size.cols,
+                                self._size.rows
+                            ))
         return matrix
 
     @property
@@ -113,12 +179,15 @@ class TileManager:
 
     @intensity.setter
     def intensity(self, val):
+        error_msg = 'Intensity must be a float between 0.0 and 1.0'
+
         try:
             if val >= 0.0 and val <= 1.0:
                 self._intensity = val
+            else:
+                raise NeoTilesError(error_msg)
         except TypeError:
-            # TODO: Consider a NeoTileError class
-            pass
+            raise NeoTilesError(error_msg)
 
     @property
     def tiles(self):
@@ -132,9 +201,10 @@ class TileManager:
 
     @property
     def tile_handlers(self):
-        # TODO: Rename to handlers?
         """
         All registered tile handlers.  Read only.
+
+        :return: ([:class:`TileHandler`]) Registered tile handlers.
         """
         return [tile['handler'] for tile in self._tiles]
 
@@ -210,7 +280,7 @@ class TileManager:
         :param in_data: (any) Input data.
         """
         for tile in self._tiles:
-            tile.handler.data(in_data)
+            tile['handler'].data(in_data)
 
     def draw(self):
         """
@@ -232,21 +302,47 @@ class TileManager:
 
         self.hardware_matrix.show()
 
-    def register_tile(self, size=None, root=None, handler=None):
+    def register_tile(self, size=None, root=None, handler=None, draw=False):
         """
         Registers a tile.
 
         :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
         :param root: (:class:`TilePosition`) Position of the top left corner
             of the tile within the neopixel matrix.
+        :param draw: (bool) Whether to draw the matrix after registering the
+            tile.
         :param handler: (:class:`TileHandler`) Handles the tile behavior.
         """
         handler.size = TileSize(*size)
 
-        # TODO: Consider making _tiles an ordered dict; or a different
-        #   structure that allows for removal and insertion.
         self._tiles.append({
             'size': handler.size,
             'root': TilePosition(*root),
             'handler': handler,
         })
+
+        if draw:
+            self.draw()
+
+    def deregister_tile(self, handler, draw=False):
+        """
+        Deregisters a tile.
+
+        :param handler: (:class:`TileHandler`) The handler associated with the
+            tile being deregistered.
+        :param draw: (bool) Whether to draw the matrix after deregistering the
+            tile.
+        :return: (int) The number of handlers removed.
+        """
+        removed = 0
+
+        for i, tile in enumerate(self._tiles):
+            if tile['handler'] == handler:
+                del self._tiles[i]
+                removed += 1
+
+        if draw:
+            self.draw()
+
+        return removed
+

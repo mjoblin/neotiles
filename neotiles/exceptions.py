@@ -1,0 +1,2 @@
+class NeoTilesError(Exception):
+    pass

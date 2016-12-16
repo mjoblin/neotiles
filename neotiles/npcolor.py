@@ -1,5 +1,4 @@
 class NPColor:
-    # TODO: Add __repr__ and __str__
     """
     Represents a single neopixel color.
 
@@ -33,6 +32,26 @@ class NPColor:
             self._normalized = not (
                 red > 1 or green > 1 or blue > 1 or white > 1
             )
+
+    def __repr__(self):
+        return '{}(red={}, green={}, blue={}, white={}, normalized={})'.format(
+            self.__class__.__name__,
+            self._red, self._green, self._blue, self._white,
+            self._normalized
+        )
+
+    def __str__(self):
+        if self._normalized:
+            formatter = ('{}(red={:.5f}, green={:.5f}, blue={:.5f}, '
+                         'white={:.5f}, normalized={})')
+        else:
+            formatter = '{}(red={}, green={}, blue={}, white={}, normalized={})'
+
+        return formatter.format(
+            self.__class__.__name__,
+            self._red, self._green, self._blue, self._white,
+            self._normalized
+        )
 
     @property
     def red(self):

@@ -1,7 +1,7 @@
 import random
 
 from .npcolor import NPColor
-from .tilemanager import TileSize, TilePosition
+from .tilemanager import PixelPosition, TileSize, TilePosition
 
 
 class TileHandler:
@@ -42,15 +42,21 @@ class TileHandler:
 
         self.size = TileSize(1, 1)
 
+    def __repr__(self):
+        return '{}(default_color={})'.format(
+            self.__class__.__name__,
+            self._default_color
+        )
+
     def _init_pixels(self, color=None):
         """
         Initialize all pixels in the tile to the given ``color``.
 
         :param color: (:class:`NPColor`) Color to initialize the pixels to.
         """
-        # A two-dimension array of pixel colors for the tile.
         display_color = self._default_color if color is None else color
 
+        # A two-dimension array of pixel colors for the tile.
         self._pixels = [
             [display_color for col in range(self._size.cols)]
             for row in range(self._size.rows)
@@ -122,15 +128,11 @@ class TileHandler:
 
     def set_pixel(self, pos, color):
         """
-        Sets the pixel at the given ``pos`` to the given ``color``.
+        Sets the pixel at the given ``pos`` in the tile to the given ``color``.
 
-        :param pos: (:class:`~TilePosition`) Pixel to set the color of.
+        :param pos: (:class:`~PixelPosition`) Pixel to set the color of.
         :param color: (:class:`~NPColor`) Color to assign.
         """
-        # Our pixel matrix is indexed by row number first, then column within
-        # the row.
-        # TODO: Overloading the meaning of TilePosition here (position of
-        #   tile on matrix vs. position of pixel in tile)
-        pos = TilePosition(*pos)
+        pos = PixelPosition(*pos)
         self._pixels[pos.y][pos.x] = color
 

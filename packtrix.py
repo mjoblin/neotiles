@@ -104,7 +104,7 @@ class Packtrix:
         ip6_intensity = PacketCountIntensityTile(
             protocol='IPv6', max_color=NPColor(0, 0, 1))
 
-        self.neotiles = TileManager(size=(8, 8))
+        self.neotiles = TileManager(size=(8, 8), led_pin=18)
         print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
             size=TileSize(8, 4), root=TilePosition(0, 0), handler=tcp_intensity)

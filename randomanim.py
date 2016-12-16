@@ -27,7 +27,7 @@ class RandomAnimTile(TileHandler):
 
 
 # Initialize an 8x8 matrix.
-tiles = TileManager(size=(8, 8))
+tiles = TileManager(size=(8, 8), led_pin=18)
 
 # Create three tile handlers.  Handlers are told their dimensions
 # later.
