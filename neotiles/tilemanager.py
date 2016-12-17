@@ -212,7 +212,7 @@ class TileManager:
         """
         All registered tile handlers.  Read only.
 
-        :return: ([:class:`TileHandler`]) Registered tile handlers.
+        :return: ([:class:`TileHandler`, ...]) Registered tile handlers.
         """
         return [tile['handler'] for tile in self._tiles]
 

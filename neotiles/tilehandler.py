@@ -83,8 +83,8 @@ class TileHandler:
         A two-dimensional list which contains the color of each neopixel in the
         tile.
 
-        :getter: ([[:class:`~NPColor`]]) Returns a two-dimensional list of
-            tile pixel colors.
+        :getter: ([[:class:`~NPColor`, ...], ...]) Returns a two-dimensional
+            list of tile pixel colors.
         """
         return self._pixels
 
