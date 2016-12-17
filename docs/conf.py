@@ -356,5 +356,17 @@ def linkcode_resolve(domain, info):
         return None
     if '.' in info['fullname']:
         return None
-    filename = info['module'].replace('.', '/')
+
+    if info['fullname'] in [
+            'TileManager', 'TilePosition', 'TileSize', 'PixelPosition']:
+        filename = 'tilemanager'
+    elif info['fullname'] == 'TileHandler':
+        filename = 'tilehandler'
+    elif info['fullname'] == 'NPColor':
+        filename = 'npcolor'
+    elif info['fullname'] == 'NeoTilesError':
+        filename = 'exceptions'
+    else:
+        return None
+
     return "https://github.com/mjoblin/neotiles/blob/master/neotiles/%s.py" % filename

@@ -180,8 +180,8 @@ class TileManager:
         """
         The intensity (between 0 and 1) of the matrix display.  Read/write.
 
-        :raises: :class:`NeoTilesError` if an attempt is made to set an
-            intensity outside of 0 and 1.
+        :raises: ``ValueError`` if an attempt is made to set an intensity
+            outside of 0 and 1.
         """
         return self._intensity
 
@@ -193,9 +193,9 @@ class TileManager:
             if val >= 0.0 and val <= 1.0:
                 self._intensity = val
             else:
-                raise NeoTilesError(error_msg)
+                raise ValueError(error_msg)
         except TypeError:
-            raise NeoTilesError(error_msg)
+            raise ValueError(error_msg)
 
     @property
     def tiles(self):
