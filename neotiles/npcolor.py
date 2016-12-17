@@ -42,8 +42,8 @@ class NPColor:
 
     def __str__(self):
         if self._normalized:
-            formatter = ('{}(red={:.5f}, green={:.5f}, blue={:.5f}, '
-                         'white={:.5f}, normalized={})')
+            formatter = ('{}(red={:.5g}, green={:.5g}, blue={:.5g}, '
+                         'white={:.5g}, normalized={})')
         else:
             formatter = '{}(red={}, green={}, blue={}, white={}, normalized={})'
 
@@ -142,7 +142,7 @@ class NPColor:
 
     def _denormalize(self, val):
         if self.is_normalized:
-            return int(val * 256)
+            return int(val * 255)
         else:
             return val
 

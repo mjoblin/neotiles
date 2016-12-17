@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.abspath('..'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -346,3 +347,14 @@ texinfo_documents = [
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 autodoc_mock_imports = ['neopixel']
+
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if not info['module']:
+        return None
+    if '.' in info['fullname']:
+        return None
+    filename = info['module'].replace('.', '/')
+    return "https://github.com/mjoblin/neotiles/blob/master/neotiles/%s.py" % filename

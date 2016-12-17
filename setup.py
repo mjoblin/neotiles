@@ -1,17 +1,30 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
-packages = ['neotiles']
+packages = [package for package in find_packages()
+            if package.startswith('neotiles')]
 
 version = '0.0.1'
 
 install_requires = [
 ]
 
+setup_requires = [
+    'pytest-runner'
+]
+
+tests_require = [
+    'pytest',
+    'pytest-cov',
+    'pytest-sugar'
+]
+
 extras_require = {
-    'dev': ['pytest', 'sphinx']
+    'dev': [
+        'sphinx',
+    ] + tests_require,
 }
 
 setup(
@@ -24,7 +37,10 @@ setup(
     packages=packages,
     install_requires=install_requires,
     extras_require=extras_require,
+    setup_requires=setup_requires,
+    tests_require=tests_require,
     license='MIT',
     classifiers=[
     ]
 )
+
