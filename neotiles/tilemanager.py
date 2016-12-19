@@ -57,7 +57,7 @@ class TileManager(object):
         if size is None or led_pin is None:
             raise NeoTilesError('size and led_pin must be specified')
 
-        self._size = TileSize(*size)
+        self.size = TileSize(*size)
         self._led_pin = led_pin
         self._intensity = intensity
         self._led_freq_hz = led_freq_hz
@@ -66,7 +66,7 @@ class TileManager(object):
         self._led_invert = led_invert
         self._strip_type = strip_type
 
-        self._led_count = self._size.cols * self._size.rows
+        self._led_count = self.size.cols * self.size.rows
         self._animation_thread = None
 
         # List of tiles we'll be displaying inside the matrix.
@@ -94,7 +94,7 @@ class TileManager(object):
             '{}(size={}, led_pin={}, intensity={}, led_freq_hz={}, '
             'led_dma={}, led_brightness={}, led_invert={}, strip_type={})'
         ).format(
-            self.__class__.__name__, self._size, self._led_pin,
+            self.__class__.__name__, self.size, self._led_pin,
             self._intensity, self._led_freq_hz, self._led_dma,
             self._led_brightness, self._led_invert, strip_name
         )
@@ -137,8 +137,8 @@ class TileManager(object):
             set to (0, 0, 0).
         """
         matrix = [
-            [PixelColor(0, 0, 0) for col in range(self._size.cols)]
-            for row in range(self._size.rows)
+            [PixelColor(0, 0, 0) for col in range(self.size.cols)]
+            for row in range(self.size.rows)
         ]
 
         return matrix
@@ -170,8 +170,8 @@ class TileManager(object):
                         raise NeoTilesError(
                             'Cannot render tile {}: pixel position ({}, {}) '
                             'is invalid for {}x{} matrix'.format(
-                                tile, matrix_col, matrix_row, self._size.cols,
-                                self._size.rows
+                                tile, matrix_col, matrix_row, self.size.cols,
+                                self.size.rows
                             ))
         return matrix
 
