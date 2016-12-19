@@ -27,7 +27,7 @@ class RandomAnimTile(TileHandler):
 
 
 # Initialize an 8x8 matrix.
-tiles = TileManager(size=(8, 8), led_pin=18)
+tiles = TileManager(size=(8, 8), led_pin=18, led_brightness=16)
 
 # Create three tile handlers.  Handlers are told their dimensions
 # later.
@@ -50,3 +50,4 @@ while True:
         tile.data(PixelColor(
             random.random(), random.random(), random.random()))
     time.sleep(1)
+    tiles.brightness = random.choice([2, 4, 8, 16, 32, 64, 128])

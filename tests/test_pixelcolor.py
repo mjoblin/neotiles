@@ -1,6 +1,7 @@
 import pytest
 
 from neotiles import PixelColor
+from neotiles.pixelcolor import PIXEL_RGB, PIXEL_RGBW
 
 
 class TestPixelColor:
@@ -145,6 +146,58 @@ class TestPixelColor:
         assert result[1] == 127
         assert result[2] == 255
         assert result[3] == 63
+
+    def test_hardware_components(self):
+        """
+        Test the tuple returned by .hardware_components.
+        """
+        # Not normalized.
+        col = PixelColor(200, 255, 128)
+        result = col.hardware_components
+        assert len(result) == 3
+        assert result[0] == 200
+        assert result[1] == 255
+        assert result[2] == 128
+
+        col = PixelColor(200, 255, 128, 16)
+        result = col.hardware_components
+        assert len(result) == 4
+        assert result[0] == 200
+        assert result[1] == 255
+        assert result[2] == 128
+        assert result[3] == 16
+
+        # Normalized.
+        col = PixelColor(0.0, 0.5, 1.0)
+        result = col.hardware_components
+        assert len(result) == 3
+        assert result[0] == 0
+        assert result[1] == 127
+        assert result[2] == 255
+
+        col = PixelColor(0.0, 0.5, 1.0, 0.25)
+        result = col.hardware_components
+        assert len(result) == 4
+        assert result[0] == 0
+        assert result[1] == 127
+        assert result[2] == 255
+        assert result[3] == 63
+
+        # Test forcing RGB and RGBW.
+        col = PixelColor(200, 255, 128, type=PIXEL_RGBW)
+        result = col.hardware_components
+        assert len(result) == 4
+        assert result[0] == 200
+        assert result[1] == 255
+        assert result[2] == 128
+        assert result[3] == 0
+
+        col = PixelColor(0.0, 0.5, 1.0, 0.25, type=PIXEL_RGB)
+        result = col.hardware_components
+        assert len(result) == 3
+        assert result[0] == 0
+        assert result[1] == 127
+        assert result[2] == 255
 
     def test_string(self):
         """

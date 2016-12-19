@@ -13,8 +13,8 @@ TileSize = namedtuple('TileSize', 'cols rows')
 PixelPosition = namedtuple('PixelPosition', 'x y')
 
 # TODO: Consider moving animate() to animate=True on constructor
-# TODO: Support RGB and RGBW
-# TODO: Check Python 2.7
+# TODO: Quietly ignore pixels outside the matrix boundary?  (Might allow for
+#   animation of the tiles themselves).
 
 
 class TileManager(object):
@@ -38,20 +38,17 @@ class TileManager(object):
     :param size: (:class:`TileSize`) Size (in columns and rows) of the neopixel
         matrix.
     :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
-    :param intensity: (float) Intensity of the matrix display.  0.5 will
-        display all pixels at half intensity of whatever the tile handlers
-        are setting each pixel to.
     :param led_freq_hz: (int) LED frequency.
     :param led_dma: (int) LED DMA.
-    :param led_brightness: (int) LED brightness.
+    :param led_brightness: (int) Brightness of the matrix display (0-255).
     :param led_invert: (bool) Whether to invert the LEDs.
     :param strip_type: (int) Neopixel strip type.
     :raises: :class:`NeoTilesError` if ``size`` or ``led_pin`` are not
         specified.
     """
     def __init__(
-            self, size=None, led_pin=None, intensity=1.0, led_freq_hz=800000,
-            led_dma=5, led_brightness=8, led_invert=False,
+            self, size=None, led_pin=None, led_freq_hz=800000, led_dma=5,
+            led_brightness=16, led_invert=False,
             strip_type=ws.WS2811_STRIP_GRB):
 
         if size is None or led_pin is None:
@@ -59,7 +56,6 @@ class TileManager(object):
 
         self.size = TileSize(*size)
         self._led_pin = led_pin
-        self._intensity = intensity
         self._led_freq_hz = led_freq_hz
         self._led_dma = led_dma
         self._led_brightness = led_brightness
@@ -91,12 +87,12 @@ class TileManager(object):
                 strip_name = 'ws.{}'.format(strip_check)
 
         return (
-            '{}(size={}, led_pin={}, intensity={}, led_freq_hz={}, '
-            'led_dma={}, led_brightness={}, led_invert={}, strip_type={})'
+            '{}(size={}, led_pin={}, led_freq_hz={}, led_dma={}, '
+            'led_brightness={}, led_invert={}, strip_type={})'
         ).format(
             self.__class__.__name__, self.size, self._led_pin,
-            self._intensity, self._led_freq_hz, self._led_dma,
-            self._led_brightness, self._led_invert, strip_name
+            self._led_freq_hz, self._led_dma, self._led_brightness,
+            self._led_invert, strip_name
         )
 
     def __str__(self):
@@ -105,28 +101,35 @@ class TileManager(object):
         matrix_string = ''
         pixel_num = 0
 
+        # Do a scan to see if any pixels have a white component.  If any do
+        # then we'll display the white component for all of them; otherwise
+        # we'll suppress it in the interest of space.
+        display_white = False
         for row_num in range(len(matrix)):
             for col_num in range(len(matrix[row_num])):
                 color = matrix[row_num][col_num]
-                matrix_string += '[{:2d}] {:-3d},{:-3d},{:-3d}  '.format(
-                    pixel_num, *self._display_color(color))
+                if color.white != 0:
+                    display_white = True
+
+        # Display a 2-dimensional grid of pixel values.
+        for row_num in range(len(matrix)):
+            for col_num in range(len(matrix[row_num])):
+                color = matrix[row_num][col_num]
+
+                if display_white:
+                    matrix_string += (
+                        '[{:2d}] {:-3d},{:-3d},{:-3d},{:-3d}  '.format(
+                            pixel_num, *color.rgbw_denormalized)
+                    )
+                else:
+                    matrix_string += '[{:2d}] {:-3d},{:-3d},{:-3d}  '.format(
+                        pixel_num, *color.rgb_denormalized)
+
                 pixel_num += 1
 
             matrix_string += '\n'
 
         return matrix_string.rstrip()
-
-    def _display_color(self, color):
-        """
-        Convert a pixel color coming from a tile to a color for display on the
-        matrix.  This involves multiplying the color by the desired matrix
-        intensity.
-
-        :param color: (:class:`PixelColor`) The pixel color from the tile.
-        :return: (tuple(r, g, b)) Color values for display on the matrix.
-        """
-        # TODO: Allow for RGBW
-        return tuple([int(i * self.intensity) for i in color.rgb_denormalized])
 
     def _generate_empty_matrix(self):
         """
@@ -176,22 +179,23 @@ class TileManager(object):
         return matrix
 
     @property
-    def intensity(self):
+    def brightness(self):
         """
-        The intensity (between 0 and 1) of the matrix display.  Read/write.
+        The brightness (between 0 and 255) of the matrix display.  Read/write.
 
-        :raises: ``ValueError`` if an attempt is made to set an intensity
+        :raises: ``ValueError`` if an attempt is made to set a brightness
             outside of 0 and 1.
         """
-        return self._intensity
+        return self._led_brightness
 
-    @intensity.setter
-    def intensity(self, val):
-        error_msg = 'Intensity must be a float between 0.0 and 1.0'
+    @brightness.setter
+    def brightness(self, val):
+        error_msg = 'Brightness must be between 0 and 255'
 
         try:
-            if val >= 0.0 and val <= 1.0:
-                self._intensity = val
+            if val >= 0 and val <= 255:
+                self._led_brightness = val
+                self.hardware_matrix.setBrightness(self._led_brightness)
             else:
                 raise ValueError(error_msg)
         except TypeError:
@@ -226,13 +230,13 @@ class TileManager(object):
         frame_delay_millis = int(1000 / max_fps)
         current_time = int(round(time.time() * 1000))
         next_frame_time = current_time + frame_delay_millis
-        self.draw()
+        self.draw_matrix()
 
         while True:
             current_time = int(round(time.time() * 1000))
             if current_time > next_frame_time:
                 next_frame_time = current_time + frame_delay_millis
-                self.draw()
+                self.draw_matrix()
 
             # The sleep time needs to be long enough that we're not churning
             # through CPU cycles checking whether it's time to render the next
@@ -264,23 +268,23 @@ class TileManager(object):
         self._animation_thread.daemon = True
         self._animation_thread.start()
 
-    def clear(self, show=True):
+    def clear(self, draw_matrix=True):
         """
         Clears the neopixel matrix (sets all pixels to
         ``PixelColor(0, 0, 0, 0)``).
 
-        :param show: (bool) Whether to draw the cleared pixels to the
+        :param draw_matrix: (bool) Whether to draw the cleared pixels to the
             neopixel matrix.
         """
         for pixel_num in range(self._led_count):
             self.hardware_matrix.setPixelColor(pixel_num, 0)
 
-        if show:
+        if draw_matrix:
             self.hardware_matrix.show()
 
     def data(self, in_data):
         """
-        Takes the ``in_data`` and sends it to all the registered tiles.
+        Takes ``in_data`` and sends it to all the registered tiles.
 
         All tiles which receive the incoming data are expected to set their
         own pixel colors based on the data contents.
@@ -290,10 +294,10 @@ class TileManager(object):
         for tile in self._tiles:
             tile['handler'].data(in_data)
 
-    def draw(self):
+    def draw_matrix(self):
         """
-        Retrieves the the current pixel colors of all tiles and displays them
-        on the neopixel matrix.
+        Retrieves the current pixel colors of all tiles and displays them on
+        the neopixel matrix.
 
         :raises: :class:`NeoTilesError` if an attempt is made to render a
             pixel outside of the neopixel matrix's dimensions.
@@ -306,22 +310,21 @@ class TileManager(object):
         for row_num in range(len(matrix)):
             for col_num in range(len(matrix[row_num])):
                 color = matrix[row_num][col_num]
-                # TODO: Allow for RGBW
-                self.hardware_matrix.setPixelColorRGB(
-                    pixel_num, *self._display_color(color))
+                self.hardware_matrix.setPixelColor(pixel_num, color.int)
                 pixel_num += 1
 
         self.hardware_matrix.show()
 
-    def register_tile(self, size=None, root=None, handler=None, draw=False):
+    def register_tile(
+            self, size=None, root=None, handler=None, draw_matrix=False):
         """
         Registers a tile.
 
         :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
         :param root: (:class:`TilePosition`) Position of the top left corner
             of the tile within the neopixel matrix.
-        :param draw: (bool) Whether to draw the matrix after registering the
-            tile.
+        :param draw_matrix: (bool) Whether to draw the matrix after registering
+            the tile.
         :param handler: (:class:`TileHandler`) Handles the tile behavior.
         """
         handler.size = TileSize(*size)
@@ -332,17 +335,17 @@ class TileManager(object):
             'handler': handler,
         })
 
-        if draw:
-            self.draw()
+        if draw_matrix:
+            self.draw_matrix()
 
-    def deregister_tile(self, handler, draw=False):
+    def deregister_tile(self, handler, draw_matrix=False):
         """
         Deregisters a tile.
 
         :param handler: (:class:`TileHandler`) The handler associated with the
             tile being deregistered.
-        :param draw: (bool) Whether to draw the matrix after deregistering the
-            tile.
+        :param draw_matrix: (bool) Whether to draw the matrix after
+            deregistering the tile.
         :return: (int) The number of handlers removed.
         """
         removed = 0
@@ -352,7 +355,7 @@ class TileManager(object):
                 del self._tiles[i]
                 removed += 1
 
-        if draw:
-            self.draw()
+        if draw_matrix:
+            self.draw_matrix()
 
         return removed

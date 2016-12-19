@@ -123,7 +123,7 @@ class Packtrix:
             tile_handler.data(dumpling)
 
         print('{}\n'.format(self.neotiles))
-        self.neotiles.draw()
+        self.neotiles.draw_matrix()
 
     def run(self):
         """

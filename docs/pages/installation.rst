@@ -114,6 +114,10 @@ You'll need to edit the script to set ``MATRIX_SIZE``, ``LED_PIN``, and
     # Not in a virtualenv
     sudo python ./script.py
 
+If your neopixel matrix is showing colors but they look a bit messed up, try
+changing the ``STRIP_TYPE`` (or the ``strip_type`` parameter in the TileManager
+constructor -- they're the same thing) to match your matrix type.
+
 .. _Adafruit site: https://learn.adafruit.com/neopixels-on-raspberry-pi/software
 .. _rpi_ws281x: https://github.com/jgarff/rpi_ws281x
 .. _virtualenv: https://virtualenv.pypa.io/en/stable/

@@ -1,3 +1,7 @@
+PIXEL_RGB = 0
+PIXEL_RGBW = 1
+
+
 class PixelColor(object):
     """
     Represents a single neopixel color.
@@ -9,21 +13,27 @@ class PixelColor(object):
     will not force the components to be between 0 and 1, but will instead force
     PixelColor to assume that they are).
 
-    The ``white`` component will only have an effect on neopixels which
-    support RGBW.
+    ``type`` is optional and will be automatically set to
+    ``pixelcolor.PIXEL_RGB`` if ``white`` is zero.  The ``white`` component
+    will only have an effect on neopixels which support RGBW.
 
     :param red: (float|int) Red component.
     :param green: (float|int) Green component.
     :param blue: (float|int) Blue component.
     :param white: (float|int) White component.
     :param normalized: (bool) Whether the color is normalized.
+    :param type: (int) Pixel type (pixelcolor.PIXEL_RGB or
+        pixelcolor.PIXEL_RGBW).
     """
-    def __init__(self, red=0, green=0, blue=0, white=0, normalized=None):
+    def __init__(self, red=0, green=0, blue=0, white=0, normalized=None,
+                 type=None):
+
         self._red = red
         self._green = green
         self._blue = blue
         self._white = white
         self._normalized = normalized
+        self._type = type
 
         if normalized is None:
             # We're guessing whether the input is normalized (between 0 and 1)
@@ -32,6 +42,11 @@ class PixelColor(object):
             self._normalized = not (
                 red > 1 or green > 1 or blue > 1 or white > 1
             )
+
+        if type is None:
+            # We're guessing the pixel type (RGB or RGBW).  If white is
+            # non-zero then we assume it's RGBW.
+            self._type = PIXEL_RGB if white == 0 else PIXEL_RGBW
 
     def __repr__(self):
         return '{}(red={}, green={}, blue={}, white={}, normalized={})'.format(
@@ -141,7 +156,26 @@ class PixelColor(object):
             self._denormalize(self.white)
         )
 
+    @property
+    def hardware_components(self):
+        """
+        The color as a tuple suitable for passing to
+        ``Adafruit_NeoPixel.setPixelColorRGB`` for display on neopixel
+        hardware.
+        """
+        if self._type == PIXEL_RGB:
+            return self.rgb_denormalized
+        else:
+            return self.rgbw_denormalized
+
     def _denormalize(self, val):
+        """
+        Denormalizes a single color component.  Does nothing if the component
+        is already denormalized.
+
+        :param val: (float|int) The component value to convert.
+        :return: (int) A denormalized value between 0 and 255.
+        """
         if self.is_normalized:
             return int(val * 255)
         else:
