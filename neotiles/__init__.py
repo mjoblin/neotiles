@@ -1,4 +1,6 @@
-from .exceptions import NeoTilesError
-from .npcolor import NPColor
-from .tilehandler import TileHandler
-from .tilemanager import PixelPosition, TileManager, TilePosition, TileSize
+from neotiles.exceptions import NeoTilesError
+from neotiles.pixelcolor import PixelColor
+from neotiles.tilehandler import TileHandler
+from neotiles.tilemanager import (
+    PixelPosition, TileManager, TilePosition, TileSize
+)

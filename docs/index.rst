@@ -3,8 +3,8 @@
 neotiles
 ========
 
-A Python library which allows you to split a `neopixel matrix`_ into multiple
-virtual tiles for independent rendering based on input data.
+neotiles is A Python library which allows you to split a `neopixel matrix`_
+into independent animated tiles for rendering based on arbitrary input data.
 
 More information
 ----------------
@@ -17,7 +17,8 @@ More information
    pages/examples
 
 
-A neopixel matrix contains RGB(W) LED pixels.  Here's what one looks like:
+A neopixel matrix contains RGB(W) LED pixels.  Here's what one looks like
+(images from `Adafruit`_):
 
 .. image:: _static/adafruit_8x8_blank.jpg
    :width: 45 %
@@ -26,67 +27,68 @@ A neopixel matrix contains RGB(W) LED pixels.  Here's what one looks like:
    :width: 45 %
 
 neotiles has been tested on a Raspberry Pi 3 with the above 8x8 neopixel RGB
-matrix and Python 3.4.  It would be surprising if it worked on
-micropython-based hardware.
+matrix and Python 3.4 and 2.7.  It has not been tested on Micropython.
 
 What neotiles does
 ------------------
 
 Normally you control all the pixels in a neopixel matrix via their unique pixel
-number, like this:
+number, like this matrix which contains pixels 0 through 63:
 
 .. image:: _static/neotiles_matrix.svg
    :width: 300
    :align: center
 
-This works great, but can become a little unwieldy if you want to display
-multiple things on your matrix at the same time; things which are based on
-input data (perhaps from a few sensors), and which might be updating regularly
-over time.
+This works great but can become a little unwieldy if you want to display
+multiple things in different sections of your matrix at the same time --
+especially if those things are based on input data (perhaps from a few sensors)
+which are changing over time (requiring animation).
 
-For example, if you wanted to display the readings from three temperature
+For example, let's say you wanted to show the readings from three different
 sensors in the three blocks shown above (top-left in red, top-right in green,
-and bottom in blue; with color intensity representing the sensor value) then
-you'd need to take the sensor data, process it, and assign all the pixel colors
-appropriately.
+and bottom in blue); and you wanted the intensity of each block's color to
+be affected by the value of the sensor, where a higher sensor value results in
+a more brightly-colored block.
 
-neotiles simplifies this by splitting your matrix into tiles.  Each tile is
-given the input data, from which it can extract the piece it needs and set the
-color of its own pixels as desired.
+neotiles simplifies this by splitting your matrix into independent rectangular
+tiles.  Each tile is given some input data, which the tile can use to set set
+the color of its own pixels as desired.
 
-The above example can now be treated as 3 separate tiles, each with its own
-mini-matrix of pixels always starting at (0, 0):
+With neotiles, the above example can now be treated as 3 separate tiles, each
+with its own mini-matrix of pixels always starting at (0, 0):
 
 .. image:: _static/neotiles_tiles.svg
    :width: 300
    :align: center
 
-All you need to do is:
+How to use it
+-------------
+
+To use neotiles all you need to do is:
 
 * Create a :class:`~TileManager` object and give it the size of your matrix.
 * Create your own subclasses of :class:`~TileHandler` and implement the :meth:`~TileHandler.data` method, which receives incoming data and sets the tile's pixel colors appropriately.
 * Register your TileHandler subclass instances with the TileManager object.
 * Enable animation with :meth:`TileManager.animate` (if you want any updating tile pixels to be automatically displayed on the matrix).
 * Send data to the TileManager object (or individually to each TileHandler object).  The data can be anything in any format, so long as your TileHandlers know how to interpret it and update their pixel colors appropriately.
-* Watch the neopixel matrix display the results.  Taco earned.
 
-Example
--------
+A quick example
+---------------
 
-Below is a simple example which takes an 8x8 matrix and renders (without input
-data or animation) three tiles inside of it: a top-left 4x4 tile (in red), a
+Below is an example which takes an 8x8 matrix and renders (without input data
+or animation) three tiles inside of it: a top-left 4x4 tile (in red), a
 top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
 
-    from neotiles import TileManager, TileHandler, NPColor
+    from neotiles import TileManager, TileHandler, PixelColor
 
     # Initialize an 8x8 matrix.
     tiles = TileManager(size=(8, 8))
 
     # Create three tile handlers.  Handlers are told their dimensions
     # later.
-    red_handler = TileHandler(default_color=NPColor(128, 0, 0))
-    grn_handler = TileHandler(default_color=NPColor(0, 128, 0))
-    blu_handler = TileHandler(default_color=NPColor(0, 0, 128))
+    red_handler = TileHandler(default_color=PixelColor(128, 0, 0))
+    grn_handler = TileHandler(default_color=PixelColor(0, 128, 0))
+    blu_handler = TileHandler(default_color=PixelColor(0, 0, 128))
 
     # Assign the 3 tile handlers to the matrix.  This is when the
     # tiles will be given their dimensions.
@@ -99,7 +101,10 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
 
 This example relies on the default TileHandler class's ``default_color``
 parameter to set its color.  Normally you'll write your own subclass of
-TileHandler which will (via your override of the data() method) set the tile's
-pixels to more interesting colors.
+TileHandler which will set the tile's pixels to more interesting colors (via
+your override of the data() method).
+
+You can see more on the :doc:`/pages/examples` page.
 
 .. _neopixel matrix: https://www.adafruit.com/?q=neopixel%20matrix
+.. _Adafruit: https://www.adafruit.com

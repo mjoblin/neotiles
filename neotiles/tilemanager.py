@@ -2,10 +2,10 @@ from collections import namedtuple
 from threading import Thread
 import time
 
-from neopixel import Adafruit_NeoPixel, Color, ws
+from neopixel import Adafruit_NeoPixel, ws
 
 from .exceptions import NeoTilesError
-from .npcolor import NPColor
+from .pixelcolor import PixelColor
 
 
 TilePosition = namedtuple('TilePosition', 'x y')
@@ -17,7 +17,7 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 # TODO: Check Python 2.7
 
 
-class TileManager:
+class TileManager(object):
     """
     Manages all the tiles displayed in a neopixel matrix.
 
@@ -28,12 +28,12 @@ class TileManager:
 
     If your RGB values appear to be mixed up (for example, red is showing as
     green) then try using a different ``strip_type``.  You can see a list of
-    valid strip type constants here (look for ``_STRIP_`` in the constant name):
-    https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html
+    valid strip type constants here (look for ``_STRIP_`` in the constant
+    name): https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html
 
     Specify a strip type like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For
-    this to work you'll need to ``import ws`` (which comes with the ``neopixel``
-    module) into your code.
+    this to work you'll need to ``import ws`` (which comes with the
+    ``neopixel`` module) into your code.
 
     :param size: (:class:`TileSize`) Size (in columns and rows) of the neopixel
         matrix.
@@ -91,12 +91,12 @@ class TileManager:
                 strip_name = 'ws.{}'.format(strip_check)
 
         return (
-            '{}(size={}, led_pin={}, intensity={}, led_freq_hz={}, led_dma={}, '
-            'led_brightness={}, led_invert={}, strip_type={})'
+            '{}(size={}, led_pin={}, intensity={}, led_freq_hz={}, '
+            'led_dma={}, led_brightness={}, led_invert={}, strip_type={})'
         ).format(
-            self.__class__.__name__, self._size, self._led_pin, self._intensity,
-            self._led_freq_hz, self._led_dma, self._led_brightness,
-            self._led_invert, strip_name
+            self.__class__.__name__, self._size, self._led_pin,
+            self._intensity, self._led_freq_hz, self._led_dma,
+            self._led_brightness, self._led_invert, strip_name
         )
 
     def __str__(self):
@@ -122,7 +122,7 @@ class TileManager:
         matrix.  This involves multiplying the color by the desired matrix
         intensity.
 
-        :param color: (:class:`NPColor`) The pixel color from the tile.
+        :param color: (:class:`PixelColor`) The pixel color from the tile.
         :return: (tuple(r, g, b)) Color values for display on the matrix.
         """
         # TODO: Allow for RGBW
@@ -133,11 +133,11 @@ class TileManager:
         Generate a 2D matrix for the given size of the neopixel matrix where
         all the pixels are set to off (0, 0, 0).
 
-        :return: ([[:class:`NPColor`]]) 2D matrix of NPColor objects all set
-            to (0, 0, 0).
+        :return: ([[:class:`PixelColor`]]) 2D matrix of PixelColor objects all
+            set to (0, 0, 0).
         """
         matrix = [
-            [NPColor(0, 0, 0) for col in range(self._size.cols)]
+            [PixelColor(0, 0, 0) for col in range(self._size.cols)]
             for row in range(self._size.rows)
         ]
 
@@ -148,7 +148,7 @@ class TileManager:
         Create a 2D matrix representing the entire pixel matrix, made up of
         each of the individual tiles' colors for each tile pixel.
 
-        :return: ([[matrix]]) 2D list of :class:`NPColor` objects.
+        :return: ([[matrix]]) 2D list of :class:`PixelColor` objects.
         :raises: :class:`NeoTilesError` if an attempt is made to render a
             pixel outside of the neopixel matrix's dimensions.
         """
@@ -166,7 +166,7 @@ class TileManager:
 
                     try:
                         matrix[matrix_row][matrix_col] = pixel_color
-                    except IndexError as e:
+                    except IndexError:
                         raise NeoTilesError(
                             'Cannot render tile {}: pixel position ({}, {}) '
                             'is invalid for {}x{} matrix'.format(
@@ -267,7 +267,7 @@ class TileManager:
     def clear(self, show=True):
         """
         Clears the neopixel matrix (sets all pixels to
-        ``NPColor(0, 0, 0, 0)``).
+        ``PixelColor(0, 0, 0, 0)``).
 
         :param show: (bool) Whether to draw the cleared pixels to the
             neopixel matrix.
@@ -356,4 +356,3 @@ class TileManager:
             self.draw()
 
         return removed
-

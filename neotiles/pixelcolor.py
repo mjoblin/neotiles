@@ -1,13 +1,13 @@
-class NPColor:
+class PixelColor(object):
     """
     Represents a single neopixel color.
 
     The ``red``, ``blue``, ``green``, and ``white`` components can either be
-    between 0 and 1 (normalized), or between 0 and 255.  NPColor will attempt
-    to determine automatically whether the components are normalized, but this
-    can be forced with ``normalized`` (setting ``normalized=True`` will not
-    force the components to be between 0 and 1, but will instead force
-    NPColor to assume that they are).
+    between 0 and 1 (normalized), or between 0 and 255.  PixelColor will
+    attempt to determine automatically whether the components are normalized,
+    but this can be forced with ``normalized`` (setting ``normalized=True``
+    will not force the components to be between 0 and 1, but will instead force
+    PixelColor to assume that they are).
 
     The ``white`` component will only have an effect on neopixels which
     support RGBW.
@@ -45,7 +45,8 @@ class NPColor:
             formatter = ('{}(red={:.5g}, green={:.5g}, blue={:.5g}, '
                          'white={:.5g}, normalized={})')
         else:
-            formatter = '{}(red={}, green={}, blue={}, white={}, normalized={})'
+            formatter = ('{}(red={}, green={}, blue={}, white={}, '
+                         'normalized={})')
 
         return formatter.format(
             self.__class__.__name__,
@@ -145,4 +146,3 @@ class NPColor:
             return int(val * 255)
         else:
             return val
-

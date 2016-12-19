@@ -1,6 +1,6 @@
 import pytest
 
-from neotiles import NPColor, PixelPosition, TileHandler, TileSize
+from neotiles import PixelColor, PixelPosition, TileHandler, TileSize
 
 from .fixtures import default_handler
 
@@ -12,7 +12,7 @@ class TestTileHandler:
 
         :param handler: (TileHandler) The handler whose pixels are to be
             inititialized.
-        :param color: (NPColor) Color to set each pixel to.
+        :param color: (PixelColor) Color to set each pixel to.
         """
         handler._init_pixels(color)
 
@@ -32,7 +32,7 @@ class TestTileHandler:
         """
         Test that we can set the default color.
         """
-        color = NPColor(0, 0.5, 1)
+        color = PixelColor(0, 0.5, 1)
         handler = TileHandler(default_color=color)
         assert handler.default_color is color
         assert handler.pixels[0][0] is color
@@ -64,8 +64,8 @@ class TestTileHandler:
         Test setting a individual pixel colors.
         """
         default_handler.size = (10, 5)
-        main_color = NPColor(100, 200, 50)
-        special_color = NPColor(99, 99, 99)
+        main_color = PixelColor(100, 200, 50)
+        special_color = PixelColor(99, 99, 99)
         self.init_pixels(default_handler, main_color)
 
         default_handler.set_pixel((1, 1), special_color)
@@ -84,7 +84,7 @@ class TestTileHandler:
         Test clearing a tile (setting all pixels to (0, 0, 0).
         """
         default_handler.size = (10, 5)
-        color = NPColor(100, 200, 50)
+        color = PixelColor(100, 200, 50)
         self.init_pixels(default_handler, color)
         default_handler.clear()
 
@@ -101,7 +101,7 @@ class TestTileHandler:
         Test initializing all pixels to the same color.
         """
         default_handler.size = (10, 5)
-        color = NPColor(100, 200, 50)
+        color = PixelColor(100, 200, 50)
         self.init_pixels(default_handler, color)
 
     def test_data(self, default_handler):
@@ -116,8 +116,8 @@ class TestTileHandler:
         """
         Test the repr output.
         """
-        handler = TileHandler(default_color=NPColor(100, 200, 50, 10))
+        handler = TileHandler(default_color=PixelColor(100, 200, 50, 10))
         assert repr(handler) == (
-            'TileHandler(default_color=NPColor(red=100, green=200, blue=50, '
+            'TileHandler(default_color=PixelColor(red=100, green=200, blue=50, '
             'white=10, normalized=False))'
         )

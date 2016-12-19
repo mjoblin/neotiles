@@ -1,23 +1,23 @@
 import random
 import time
 
-from neotiles import TileManager, NPColor, TileHandler, TilePosition
+from neotiles import TileManager, PixelColor, TileHandler, TilePosition
 
 
 class RandomAnimTile(TileHandler):
     def __init__(self):
-        super().__init__(default_color=NPColor(0, 0, 0))
+        super(RandomAnimTile, self).__init__(default_color=PixelColor(0, 0, 0))
         self.clear()
 
     def data(self, in_data):
-        super().data(in_data)
+        super(RandomAnimTile, self).data(in_data)
 
         for row in range(self.size.rows):
             for col in range(self.size.cols):
                 # Set each pixel to the tile's color multiplied by an intensity
                 # value between 0.4 and 1.0.
                 intensity = random.uniform(0.4, 1.0)
-                display_color = NPColor(
+                display_color = PixelColor(
                     in_data.red * intensity,
                     in_data.green * intensity,
                     in_data.blue * intensity
@@ -47,6 +47,6 @@ tiles.animate()
 while True:
     # Update each tile's color each second.
     for tile in [random_tile_1, random_tile_2, random_tile_3]:
-        tile.data(NPColor(
+        tile.data(PixelColor(
             random.random(), random.random(), random.random()))
     time.sleep(1)

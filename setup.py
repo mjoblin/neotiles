@@ -24,6 +24,7 @@ tests_require = [
 extras_require = {
     'dev': [
         'sphinx',
+        'flake8',
     ] + tests_require,
 }
 
