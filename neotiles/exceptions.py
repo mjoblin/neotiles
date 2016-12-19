@@ -1,2 +1,4 @@
 class NeoTilesError(Exception):
-    pass
+    """
+    Parent exception class for neotiles errors.
+    """

@@ -10,16 +10,16 @@ long as the element order is the same.
 
 Main classes:
 
-* :class:`~TileManager` - Manages all the tiles being displayed on a neopixel matrix.
-* :class:`~TileHandler` - Handles the data and pixel-coloring needs of a single tile.
-* :class:`~PixelColor` - The color of a single neopixel.
+* :class:`TileManager` - Manages all the tiles being displayed on a neopixel matrix.
+* :class:`TileHandler` - Handles the data and pixel-coloring needs of a single tile.
+* :class:`PixelColor` - The color of a single neopixel.
 
 Supporting classes:
 
-* :class:`~TilePosition` - The position of a tile inside the larger neopixel matrix.
-* :class:`~TileSize` - The size of a tile (in cols and rows).
-* :class:`~PixelPosition` - The position of a neopixel inside a tile.
-* :class:`~NeoTilesError` - Exception raised when neotiles encounters a problem.
+* :class:`TilePosition` - The position of a tile inside the larger neopixel matrix.
+* :class:`TileSize` - The size of a tile (in cols and rows).
+* :class:`PixelPosition` - The position of a neopixel inside a tile.
+* :class:`exceptions.NeoTilesError` - Exception raised when neotiles encounters a problem.
 
 Main classes
 ------------
@@ -65,10 +65,10 @@ PixelPosition
 .. autoclass:: PixelPosition
    :members:
 
-NeoTilesError
-^^^^^^^^^^^^^
+neotiles.NeoTilesError
+^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: NeoTilesError
+.. autoclass:: neotiles.exceptions.NeoTilesError
    :members:
 
 Development
