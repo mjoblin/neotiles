@@ -80,7 +80,7 @@ class PacketCountIntensityTile(TileHandler):
             for col in range(self.size[0]):
                 display_color = tuple(
                     [int(val * display_intensity)
-                     for val in self._max_color.rgbw_denormalized]
+                     for val in self._max_color.components_denormalized]
                 )
                 self.set_pixel(
                     TilePosition(col, row), PixelColor(*display_color))

@@ -348,6 +348,8 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 autodoc_mock_imports = ['neopixel']
 
+autodoc_member_order = 'bysource'
+
 
 def linkcode_resolve(domain, info):
     if domain != 'py':
@@ -363,7 +365,7 @@ def linkcode_resolve(domain, info):
     elif info['fullname'] == 'TileHandler':
         filename = 'tilehandler'
     elif info['fullname'] == 'PixelColor':
-        filename = 'npcolor'
+        filename = 'pixelcolor'
     elif info['fullname'] == 'NeoTilesError':
         filename = 'exceptions'
     else:

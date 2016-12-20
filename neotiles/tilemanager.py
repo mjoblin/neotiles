@@ -15,16 +15,18 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 # TODO: Consider moving animate() to animate=True on constructor
 # TODO: Quietly ignore pixels outside the matrix boundary?  (Might allow for
 #   animation of the tiles themselves).
+# TODO: Change getter/setter docs.
+# TODO: Check other docs for completeness.
 
 
 class TileManager(object):
     """
     Manages all the tiles displayed in a neopixel matrix.
 
-    You must specify ``size`` and ``led_pin``.  The other parameters can
-    usually be left at their defaults.  For more information on the other
-    parameters look at the ``Adafruit_NeoPixel`` class in the ``neopixel``
-    module.
+    You must specify a ``size`` (e.g. ``(8, 8)``) and ``led_pin`` (e.g.
+    ``18``).  The other parameters can usually be left at their defaults.  For
+    more information on the other parameters look at the ``Adafruit_NeoPixel``
+    class in the ``neopixel`` module.
 
     If your RGB values appear to be mixed up (for example, red is showing as
     green) then try using a different ``strip_type``.  You can see a list of
@@ -35,7 +37,7 @@ class TileManager(object):
     this to work you'll need to ``import ws`` (which comes with the
     ``neopixel`` module) into your code.
 
-    :param size: (:class:`TileSize`) Size (in columns and rows) of the neopixel
+    :param size: (:class:`TileSize`) Size (in cols and rows) of the neopixel
         matrix.
     :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
     :param led_freq_hz: (int) LED frequency.
@@ -43,8 +45,8 @@ class TileManager(object):
     :param led_brightness: (int) Brightness of the matrix display (0-255).
     :param led_invert: (bool) Whether to invert the LEDs.
     :param strip_type: (int) Neopixel strip type.
-    :raises: :class:`NeoTilesError` if ``size`` or ``led_pin`` are not
-        specified.
+    :raises: :class:`exceptions.NeoTilesError` if ``size`` or ``led_pin`` are
+        not specified.
     """
     def __init__(
             self, size=None, led_pin=None, led_freq_hz=800000, led_dma=5,
@@ -108,22 +110,28 @@ class TileManager(object):
         for row_num in range(len(matrix)):
             for col_num in range(len(matrix[row_num])):
                 color = matrix[row_num][col_num]
-                if color.white != 0:
+                if color.white is not None:
                     display_white = True
 
         # Display a 2-dimensional grid of pixel values.
         for row_num in range(len(matrix)):
             for col_num in range(len(matrix[row_num])):
                 color = matrix[row_num][col_num]
+                denormalized = color.hardware_components
+
+                if len(denormalized) == 3 and display_white:
+                    display_components = denormalized + 0
+                else:
+                    display_components = denormalized
 
                 if display_white:
                     matrix_string += (
                         '[{:2d}] {:-3d},{:-3d},{:-3d},{:-3d}  '.format(
-                            pixel_num, *color.rgbw_denormalized)
+                            pixel_num, *display_components)
                     )
                 else:
                     matrix_string += '[{:2d}] {:-3d},{:-3d},{:-3d}  '.format(
-                        pixel_num, *color.rgb_denormalized)
+                        pixel_num, *display_components)
 
                 pixel_num += 1
 
@@ -137,10 +145,10 @@ class TileManager(object):
         all the pixels are set to off (0, 0, 0).
 
         :return: ([[:class:`PixelColor`]]) 2D matrix of PixelColor objects all
-            set to (0, 0, 0).
+            set to (0, 0, 0, 0).
         """
         matrix = [
-            [PixelColor(0, 0, 0) for col in range(self.size.cols)]
+            [PixelColor(0, 0, 0, 0) for col in range(self.size.cols)]
             for row in range(self.size.rows)
         ]
 
@@ -178,13 +186,154 @@ class TileManager(object):
                             ))
         return matrix
 
+    def _animate(self, max_fps=10):
+        """
+        Internal animation method.  Spawns a new thread to manage the drawing
+        of the matrix at the (hoped-for) frame rate.
+
+        :param max_fps: (int) The maximum frames per second.
+        """
+        frame_delay_millis = int(1000 / max_fps)
+        current_time = int(round(time.time() * 1000))
+        next_frame_time = current_time + frame_delay_millis
+        self.draw_matrix()
+
+        while True:
+            current_time = int(round(time.time() * 1000))
+            if current_time > next_frame_time:
+                next_frame_time = current_time + frame_delay_millis
+                self.draw_matrix()
+
+            # The sleep time needs to be long enough that we're not churning
+            # through CPU cycles checking whether it's time to render the next
+            # frame or not; but short enough to allow us to render the next
+            # frame as soon as possible once we're past our next-frame wait
+            # time.  This is a bit of a cheap-and-cheerful animation loop, and
+            # this sleep duration may not be ideal.
+            time.sleep(0.005)
+
+    def register_tile(
+            self, size=None, root=None, handler=None, draw_matrix=False):
+        """
+        Registers a tile with the tile manager.
+
+        :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
+        :param root: (:class:`TilePosition`) Position of the top left corner
+            of the tile within the neopixel matrix.
+        :param draw_matrix: (bool) Whether to draw the matrix after registering
+            the tile.
+        :param handler: (:class:`TileHandler`) Handles the tile behavior.
+        """
+        handler.size = TileSize(*size)
+
+        self._tiles.append({
+            'size': handler.size,
+            'root': TilePosition(*root),
+            'handler': handler,
+        })
+
+        if draw_matrix:
+            self.draw_matrix()
+
+    def deregister_tile(self, handler, draw_matrix=False):
+        """
+        Deregisters a tile from the tile manager.
+
+        :param handler: (:class:`TileHandler`) The handler associated with the
+            tile being deregistered.
+        :param draw_matrix: (bool) Whether to draw the matrix after
+            deregistering the tile.
+        :return: (int) The number of handlers removed.
+        """
+        removed = 0
+
+        for i, tile in enumerate(self._tiles):
+            if tile['handler'] == handler:
+                del self._tiles[i]
+                removed += 1
+
+        if draw_matrix:
+            self.draw_matrix()
+
+        return removed
+
+    def data(self, in_data):
+        """
+        Takes ``in_data`` and sends it to all the registered tiles.
+
+        All tiles which receive the incoming data are expected to set their
+        own pixel colors based on the data contents.
+
+        :param in_data: (any) Input data.
+        """
+        for tile in self._tiles:
+            tile['handler'].data(in_data)
+
+    def draw_matrix(self):
+        """
+        Retrieves the current pixel colors of all registered tiles and displays
+        them on the neopixel matrix.
+
+        :raises: :class:`NeoTilesError` if an attempt is made to render a
+            pixel outside of the neopixel matrix's dimensions.
+        """
+        matrix = self._generate_matrix()
+
+        # Walk through the matrix from the top left to the bottom right,
+        # painting pixels as we go.
+        pixel_num = 0
+        for row_num in range(len(matrix)):
+            for col_num in range(len(matrix[row_num])):
+                color = matrix[row_num][col_num]
+                self.hardware_matrix.setPixelColor(
+                    pixel_num, color.hardware_int)
+                pixel_num += 1
+
+        self.hardware_matrix.show()
+
+    def clear(self, draw_matrix=True):
+        """
+        Clears the neopixel matrix (sets all pixels to
+        ``PixelColor(0, 0, 0, 0)``).
+
+        :param draw_matrix: (bool) Whether to draw the cleared pixels to the
+            neopixel matrix.
+        """
+        for pixel_num in range(self._led_count):
+            self.hardware_matrix.setPixelColor(pixel_num, 0)
+
+        if draw_matrix:
+            self.hardware_matrix.show()
+
+    def animate(self, max_fps=10):
+        """
+        Start the animation loop.
+
+        The animation loop will attempt to re-draw the matrix at a rate of
+        ``max_fps`` times per second.  This rate may or may not be achieved
+        depending on what else the CPU is doing, including the compute load
+        created by the tile handlers' :meth:`TileHandler.data` methods.
+
+        The animation loop assumes that something else will be sending data to
+        the tile handlers (via the :meth:`TileHandler.data` or
+        :meth:`TileManager.data` methods), which are then updating their tile's
+        pixel colors.  If that isn't happening then the animation loop will
+        likely keep re-drawing the matrix with the same pixel colors.
+
+        :param max_fps: (int) The maximum frames per second.
+        """
+        # TODO: Add a stop_animation method.
+        self._animation_thread = Thread(target=self._animate, args=(max_fps,))
+        self._animation_thread.daemon = True
+        self._animation_thread.start()
+
     @property
     def brightness(self):
         """
         The brightness (between 0 and 255) of the matrix display.  Read/write.
 
         :raises: ``ValueError`` if an attempt is made to set a brightness
-            outside of 0 and 1.
+            outside of 0 and 255.
         """
         return self._led_brightness
 
@@ -219,143 +368,3 @@ class TileManager(object):
         :return: ([:class:`TileHandler`, ...]) Registered tile handlers.
         """
         return [tile['handler'] for tile in self._tiles]
-
-    def _animate(self, max_fps=10):
-        """
-        Internal animation method.  Spawns a new thread to manage the drawing
-        of the matrix at the (hoped-for) frame rate.
-
-        :param max_fps: (int) The maximum frames per second.
-        """
-        frame_delay_millis = int(1000 / max_fps)
-        current_time = int(round(time.time() * 1000))
-        next_frame_time = current_time + frame_delay_millis
-        self.draw_matrix()
-
-        while True:
-            current_time = int(round(time.time() * 1000))
-            if current_time > next_frame_time:
-                next_frame_time = current_time + frame_delay_millis
-                self.draw_matrix()
-
-            # The sleep time needs to be long enough that we're not churning
-            # through CPU cycles checking whether it's time to render the next
-            # frame or not; but short enough to allow us to render the next
-            # frame as soon as possible once we're past our next-frame wait
-            # time.  This is a bit of a cheap-and-cheerful animation loop, and
-            # this sleep duration may not be ideal.
-            time.sleep(0.005)
-
-    def animate(self, max_fps=10):
-        """
-        Start the animation loop.
-
-        The animation loop will attempt to re-draw the matrix at a rate of
-        ``max_fps`` times per second.  This rate may or may not be achieved
-        depending on what else the CPU is doing, including the compute load
-        created by the tile handlers.
-
-        The animation loop assumes that something else will be sending data to
-        the tile handlers (via the :meth:`TileHandler.data` or
-        :meth:`TileManager.data` methods), which are then updating their
-        pixel colors.  If that isn't happening then the animation loop will
-        likely keep re-drawing the matrix with the same pixel colors.
-
-        :param max_fps: (int) The maximum frames per second.
-        """
-        # TODO: Add a stop_animation method.
-        self._animation_thread = Thread(target=self._animate, args=(max_fps,))
-        self._animation_thread.daemon = True
-        self._animation_thread.start()
-
-    def clear(self, draw_matrix=True):
-        """
-        Clears the neopixel matrix (sets all pixels to
-        ``PixelColor(0, 0, 0, 0)``).
-
-        :param draw_matrix: (bool) Whether to draw the cleared pixels to the
-            neopixel matrix.
-        """
-        for pixel_num in range(self._led_count):
-            self.hardware_matrix.setPixelColor(pixel_num, 0)
-
-        if draw_matrix:
-            self.hardware_matrix.show()
-
-    def data(self, in_data):
-        """
-        Takes ``in_data`` and sends it to all the registered tiles.
-
-        All tiles which receive the incoming data are expected to set their
-        own pixel colors based on the data contents.
-
-        :param in_data: (any) Input data.
-        """
-        for tile in self._tiles:
-            tile['handler'].data(in_data)
-
-    def draw_matrix(self):
-        """
-        Retrieves the current pixel colors of all tiles and displays them on
-        the neopixel matrix.
-
-        :raises: :class:`NeoTilesError` if an attempt is made to render a
-            pixel outside of the neopixel matrix's dimensions.
-        """
-        matrix = self._generate_matrix()
-
-        # Walk through the matrix from the top left to the bottom right,
-        # painting pixels as we go.
-        pixel_num = 0
-        for row_num in range(len(matrix)):
-            for col_num in range(len(matrix[row_num])):
-                color = matrix[row_num][col_num]
-                self.hardware_matrix.setPixelColor(pixel_num, color.int)
-                pixel_num += 1
-
-        self.hardware_matrix.show()
-
-    def register_tile(
-            self, size=None, root=None, handler=None, draw_matrix=False):
-        """
-        Registers a tile.
-
-        :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
-        :param root: (:class:`TilePosition`) Position of the top left corner
-            of the tile within the neopixel matrix.
-        :param draw_matrix: (bool) Whether to draw the matrix after registering
-            the tile.
-        :param handler: (:class:`TileHandler`) Handles the tile behavior.
-        """
-        handler.size = TileSize(*size)
-
-        self._tiles.append({
-            'size': handler.size,
-            'root': TilePosition(*root),
-            'handler': handler,
-        })
-
-        if draw_matrix:
-            self.draw_matrix()
-
-    def deregister_tile(self, handler, draw_matrix=False):
-        """
-        Deregisters a tile.
-
-        :param handler: (:class:`TileHandler`) The handler associated with the
-            tile being deregistered.
-        :param draw_matrix: (bool) Whether to draw the matrix after
-            deregistering the tile.
-        :return: (int) The number of handlers removed.
-        """
-        removed = 0
-
-        for i, tile in enumerate(self._tiles):
-            if tile['handler'] == handler:
-                del self._tiles[i]
-                removed += 1
-
-        if draw_matrix:
-            self.draw_matrix()
-
-        return removed

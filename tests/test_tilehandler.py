@@ -41,7 +41,7 @@ class TestTileHandler:
         assert pixel.red == 0
         assert pixel.green == 0.5
         assert pixel.blue == 1
-        assert pixel.white == 0
+        assert pixel.white is None
 
     def test_size(self, default_handler):
         """
