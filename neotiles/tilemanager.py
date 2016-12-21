@@ -1,5 +1,5 @@
 from collections import namedtuple
-from threading import Thread
+import threading
 import time
 
 from neopixel import Adafruit_NeoPixel, ws
@@ -17,6 +17,24 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 #   animation of the tiles themselves).
 # TODO: Change getter/setter docs.
 # TODO: Check other docs for completeness.
+
+
+class StoppableThread(threading.Thread):
+    """
+    Thread class with a stop() method. The thread itself has to check regularly
+    for the stopped() condition.
+
+    http://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread-in-python
+    """
+    def __init__(self, **kwargs):
+        super(StoppableThread, self).__init__(**kwargs)
+        self._stop_requested = threading.Event()
+
+    def stop(self):
+        self._stop_requested.set()
+
+    def stopped(self):
+        return self._stop_requested.isSet()
 
 
 class TileManager(object):
@@ -37,9 +55,28 @@ class TileManager(object):
     this to work you'll need to ``import ws`` (which comes with the
     ``neopixel`` module) into your code.
 
+    **Animation**:
+
+    The ``draw_fps`` (draw frames per second) parameter controls how many times
+    per second the animation loop (which runs in a separate thread) will call
+    :meth:`draw_matrix`.  If ``draw_fps=None`` then the matrix will not be
+    drawn automatically and you must call :meth:`draw_matrix` manually.
+
+    The animation loop will attempt to re-draw the matrix at a rate of
+    ``draw_fps`` times per second.  This rate may or may not be achieved
+    depending on what else the CPU is doing, including the compute load created
+    by the tile handlers' :meth:`TileHandler.data` methods.
+
+    The animation loop assumes that something else will be sending data to the
+    tile handlers (via the :meth:`TileHandler.data` or :meth:`TileManager.data`
+    methods), which are then updating their tile's pixel colors.  If that isn't
+    happening then the animation loop will likely keep re-drawing the matrix
+    with the same pixel colors.
+
     :param size: (:class:`TileSize`) Size (in cols and rows) of the neopixel
         matrix.
     :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
+    :param draw_fps: (int) The frame rate for the drawing animation loop.
     :param led_freq_hz: (int) LED frequency.
     :param led_dma: (int) LED DMA.
     :param led_brightness: (int) Brightness of the matrix display (0-255).
@@ -49,8 +86,8 @@ class TileManager(object):
         not specified.
     """
     def __init__(
-            self, size=None, led_pin=None, led_freq_hz=800000, led_dma=5,
-            led_brightness=16, led_invert=False,
+            self, size=None, led_pin=None, draw_fps=None, led_freq_hz=800000,
+            led_dma=5, led_brightness=16, led_invert=False,
             strip_type=ws.WS2811_STRIP_GRB):
 
         if size is None or led_pin is None:
@@ -58,6 +95,7 @@ class TileManager(object):
 
         self.size = TileSize(*size)
         self._led_pin = led_pin
+        self._draw_fps = draw_fps
         self._led_freq_hz = led_freq_hz
         self._led_dma = led_dma
         self._led_brightness = led_brightness
@@ -186,23 +224,43 @@ class TileManager(object):
                             ))
         return matrix
 
-    def _animate(self, max_fps=10):
+    def _draw_matrix(self):
+        """
+        Retrieves the current pixel colors of all registered tiles and displays
+        them on the neopixel matrix.
+
+        :raises: :class:`NeoTilesError` if an attempt is made to render a
+            pixel outside of the neopixel matrix's dimensions.
+        """
+        matrix = self._generate_matrix()
+
+        # Walk through the matrix from the top left to the bottom right,
+        # painting pixels as we go.
+        pixel_num = 0
+        for row_num in range(len(matrix)):
+            for col_num in range(len(matrix[row_num])):
+                color = matrix[row_num][col_num]
+                self.hardware_matrix.setPixelColor(
+                    pixel_num, color.hardware_int)
+                pixel_num += 1
+
+        self.hardware_matrix.show()
+
+    def _animate(self):
         """
         Internal animation method.  Spawns a new thread to manage the drawing
         of the matrix at the (hoped-for) frame rate.
-
-        :param max_fps: (int) The maximum frames per second.
         """
-        frame_delay_millis = int(1000 / max_fps)
+        frame_delay_millis = int(1000 / self._draw_fps)
         current_time = int(round(time.time() * 1000))
         next_frame_time = current_time + frame_delay_millis
-        self.draw_matrix()
+        self._draw_matrix()
 
         while True:
             current_time = int(round(time.time() * 1000))
             if current_time > next_frame_time:
                 next_frame_time = current_time + frame_delay_millis
-                self.draw_matrix()
+                self._draw_matrix()
 
             # The sleep time needs to be long enough that we're not churning
             # through CPU cycles checking whether it's time to render the next
@@ -211,6 +269,9 @@ class TileManager(object):
             # time.  This is a bit of a cheap-and-cheerful animation loop, and
             # this sleep duration may not be ideal.
             time.sleep(0.005)
+
+            if self._animation_thread.stopped():
+                return
 
     def register_tile(
             self, size=None, root=None, handler=None, draw_matrix=False):
@@ -239,6 +300,10 @@ class TileManager(object):
         """
         Deregisters a tile from the tile manager.
 
+        If deregistering the tile results in no tiles being registered with
+        the manager, then the matrix-drawing animation loop will be stopped
+        automatically.
+
         :param handler: (:class:`TileHandler`) The handler associated with the
             tile being deregistered.
         :param draw_matrix: (bool) Whether to draw the matrix after
@@ -254,6 +319,9 @@ class TileManager(object):
 
         if draw_matrix:
             self.draw_matrix()
+
+        if len(self._tiles) == 0:
+            self.draw_stop()
 
         return removed
 
@@ -271,25 +339,28 @@ class TileManager(object):
 
     def draw_matrix(self):
         """
-        Retrieves the current pixel colors of all registered tiles and displays
-        them on the neopixel matrix.
+        Draw the matrix.
 
-        :raises: :class:`NeoTilesError` if an attempt is made to render a
-            pixel outside of the neopixel matrix's dimensions.
+        If the ``draw_fps`` attribute (set at TileManager instantiation) is
+        not ``None`` then this method will also trigger the animation loop (if
+        it's not already running).
         """
-        matrix = self._generate_matrix()
+        if self._draw_fps is None:
+            self._draw_matrix()
+            return
 
-        # Walk through the matrix from the top left to the bottom right,
-        # painting pixels as we go.
-        pixel_num = 0
-        for row_num in range(len(matrix)):
-            for col_num in range(len(matrix[row_num])):
-                color = matrix[row_num][col_num]
-                self.hardware_matrix.setPixelColor(
-                    pixel_num, color.hardware_int)
-                pixel_num += 1
+        if self._animation_thread is None:
+            self._animation_thread = StoppableThread(target=self._animate)
+            self._animation_thread.start()
 
-        self.hardware_matrix.show()
+    def draw_stop(self):
+        """
+        Stop the matrix-drawing animation loop.
+        """
+        if self._animation_thread is not None:
+            self._animation_thread.stop()
+            self._animation_thread.join()
+            self._animation_thread = None
 
     def clear(self, draw_matrix=True):
         """
@@ -304,28 +375,6 @@ class TileManager(object):
 
         if draw_matrix:
             self.hardware_matrix.show()
-
-    def animate(self, max_fps=10):
-        """
-        Start the animation loop.
-
-        The animation loop will attempt to re-draw the matrix at a rate of
-        ``max_fps`` times per second.  This rate may or may not be achieved
-        depending on what else the CPU is doing, including the compute load
-        created by the tile handlers' :meth:`TileHandler.data` methods.
-
-        The animation loop assumes that something else will be sending data to
-        the tile handlers (via the :meth:`TileHandler.data` or
-        :meth:`TileManager.data` methods), which are then updating their tile's
-        pixel colors.  If that isn't happening then the animation loop will
-        likely keep re-drawing the matrix with the same pixel colors.
-
-        :param max_fps: (int) The maximum frames per second.
-        """
-        # TODO: Add a stop_animation method.
-        self._animation_thread = Thread(target=self._animate, args=(max_fps,))
-        self._animation_thread.daemon = True
-        self._animation_thread.start()
 
     @property
     def brightness(self):
@@ -368,3 +417,11 @@ class TileManager(object):
         :return: ([:class:`TileHandler`, ...]) Registered tile handlers.
         """
         return [tile['handler'] for tile in self._tiles]
+
+    @property
+    def pixels(self):
+        """
+        A two-dimensional list which contains the color of each neopixel in the
+        matrix.
+        """
+        return self._generate_matrix()

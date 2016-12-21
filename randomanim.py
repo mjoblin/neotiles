@@ -27,7 +27,7 @@ class RandomAnimTile(TileHandler):
 
 
 # Initialize an 8x8 matrix.
-tiles = TileManager(size=(8, 8), led_pin=18, led_brightness=16)
+tiles = TileManager(size=(8, 8), led_pin=18, draw_fps=10, led_brightness=16)
 
 # Create three tile handlers.  Handlers are told their dimensions
 # later.
@@ -42,12 +42,16 @@ tiles.register_tile(size=(4, 4), root=(4, 0), handler=random_tile_2)
 tiles.register_tile(size=(8, 4), root=(0, 4), handler=random_tile_3)
 
 # Kick off the matrix animation.
-tiles.animate()
+tiles.draw_matrix()
 
-while True:
-    # Update each tile's color each second.
-    for tile in [random_tile_1, random_tile_2, random_tile_3]:
-        tile.data(PixelColor(
-            random.random(), random.random(), random.random()))
-    time.sleep(1)
-    tiles.brightness = random.choice([2, 4, 8, 16, 32, 64, 128])
+try:
+    while True:
+        # Update each tile's color each second.
+        for tile in [random_tile_1, random_tile_2, random_tile_3]:
+            tile.data(PixelColor(
+                random.random(), random.random(), random.random()))
+        time.sleep(1)
+        tiles.brightness = random.choice([2, 4, 8, 16, 32, 64, 128])
+except KeyboardInterrupt:
+    tiles.draw_stop()
+    tiles.clear()

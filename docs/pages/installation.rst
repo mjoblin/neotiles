@@ -40,7 +40,7 @@ Here's the steps: ::
     sudo su -
 
     # Create a virtualenv to install the neopixel library. This forces
-    # python3.4.  Remove '--python=python3.4' to use default Python
+    # Python 3.4.  Remove '--python=python3.4' to use default Python
     # (usually Python 2.7).
     virtualenv venv_neotiles --python=python3.4
     source venv_neotiles/bin/activate

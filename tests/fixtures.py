@@ -7,7 +7,8 @@ from neotiles import TileManager, TileHandler
 def default_handler():
     return TileHandler()
 
+
 @pytest.fixture
 def manager_10x5():
-    return TileManager(led_pin=18, size=(10, 5))
+    return TileManager(size=(10, 5), led_pin=18)
 

@@ -1,24 +1,24 @@
 .. automodule:: neotiles
 
-neotiles
-========
-
-neotiles is A Python library which allows you to split a `neopixel matrix`_
-into independent animated tiles for rendering based on arbitrary input data.
-
-More information
-----------------
-
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    pages/installation
    pages/api
    pages/examples
 
+neotiles
+========
 
-A neopixel matrix contains RGB(W) LED pixels.  Here's what one looks like
-(images from `Adafruit`_):
+neotiles is a Python library which allows you to split a `neopixel matrix`_
+into independent animated tiles for rendering based on arbitrary input data.
+Each tile can display something different: a block of color, an animation,
+scrolling text, whatever you like; and all the tiles can be displayed in
+different regions of a single neopixel matrix.
+
+A neopixel matrix contains a grid of RGB(W) LED pixels.  Here's what one looks
+like (images from `Adafruit`_):
 
 .. image:: _static/adafruit_8x8_blank.jpg
    :width: 45 %
@@ -51,8 +51,8 @@ be affected by the value of the sensor, where a higher sensor value results in
 a more brightly-colored block.
 
 neotiles simplifies this by splitting your matrix into independent rectangular
-tiles.  Each tile is given some input data, which the tile can use to set set
-the color of its own pixels as desired.
+tiles.  Each tile is given some input data which the tile can use to set set
+the color of its own pixels.
 
 With neotiles, the above example can now be treated as 3 separate tiles, each
 with its own mini-matrix of pixels always starting at (0, 0):
@@ -66,11 +66,11 @@ How to use it
 
 To use neotiles all you need to do is:
 
-* Create a :class:`~TileManager` object and give it the size of your matrix.
+* Create a :class:`~TileManager` object, enabling animation if you wish.
 * Create your own subclasses of :class:`~TileHandler` and implement the :meth:`~TileHandler.data` method, which receives incoming data and sets the tile's pixel colors appropriately.
 * Register your TileHandler subclass instances with the TileManager object.
-* Enable animation with :meth:`TileManager.animate` (if you want any updating tile pixels to be automatically displayed on the matrix).
-* Send data to the TileManager object (or individually to each TileHandler object).  The data can be anything in any format, so long as your TileHandlers know how to interpret it and update their pixel colors appropriately.
+* Call :meth:`TileManager.draw_matrix` to draw all the tiles on the matrix.
+* Send data to the TileManager object (or individually to each TileHandler object).  The data can be anything in any format, so long as your TileHandlers know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop.
 
 A quick example
 ---------------
@@ -82,7 +82,7 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
     from neotiles import TileManager, TileHandler, PixelColor
 
     # Initialize an 8x8 matrix.
-    tiles = TileManager(size=(8, 8))
+    tiles = TileManager(size=(8, 8), led_pin=18)
 
     # Create three tile handlers.  Handlers are told their dimensions
     # later.
@@ -97,7 +97,7 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
     tiles.register_tile(size=(8, 4), root=(0, 4), handler=blu_handler)
 
     # Display each tile's pixel colors on the neopixel matrix.
-    tiles.draw()
+    tiles.draw_matrix()
 
 This example relies on the default TileHandler class's ``default_color``
 parameter to set its color.  Normally you'll write your own subclass of
