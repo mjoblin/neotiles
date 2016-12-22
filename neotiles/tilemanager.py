@@ -17,6 +17,13 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 #   animation of the tiles themselves).
 # TODO: Change getter/setter docs.
 # TODO: Check other docs for completeness.
+# TODO: Rename pixels to pixel_colors?
+# TODO: Test exceptions on setting getters.
+# TODO: Look into commandline options for pytest to pass in matrix size
+# TODO: Create test_hardware.py for actual hardware tests (import Adafruit too)
+# TODO: Check that tests are testing method arguments
+# TODO: Add hardware_matrix attribute to docs
+# TODO: Move exceptions to exceptions.*
 
 
 class StoppableThread(threading.Thread):
@@ -87,7 +94,7 @@ class TileManager(object):
     """
     def __init__(
             self, size=None, led_pin=None, draw_fps=None, led_freq_hz=800000,
-            led_dma=5, led_brightness=16, led_invert=False,
+            led_dma=5, led_brightness=64, led_invert=False,
             strip_type=ws.WS2811_STRIP_GRB):
 
         if size is None or led_pin is None:
@@ -136,7 +143,7 @@ class TileManager(object):
         )
 
     def __str__(self):
-        matrix = self._generate_matrix()
+        matrix = self._generate_matrix_from_tiles()
 
         matrix_string = ''
         pixel_num = 0
@@ -192,7 +199,7 @@ class TileManager(object):
 
         return matrix
 
-    def _generate_matrix(self):
+    def _generate_matrix_from_tiles(self):
         """
         Create a 2D matrix representing the entire pixel matrix, made up of
         each of the individual tiles' colors for each tile pixel.
@@ -206,7 +213,17 @@ class TileManager(object):
         # Set the matrix pixels to the colors of each tile in turn.  If any
         # tiles happen to overlap then the last one processed will win.
         for tile in self._tiles:
-            tile_matrix = tile['handler'].pixels
+            tile_handler = tile['handler']
+
+            # Call the draw() method of any tile which is flagged as animating.
+            if tile_handler.animate:
+                tile_handler.draw()
+
+            # Retrieve the pixel colors of the tile.
+            tile_matrix = tile_handler.pixels
+
+            # Draw the tile's pixels in the right place on the matrix
+            # (determined by the tile's root position).
             for tile_row_num in range(len(tile_matrix)):
                 for tile_col_num in range(len(tile_matrix[tile_row_num])):
                     pixel_color = tile_matrix[tile_row_num][tile_col_num]
@@ -232,7 +249,7 @@ class TileManager(object):
         :raises: :class:`NeoTilesError` if an attempt is made to render a
             pixel outside of the neopixel matrix's dimensions.
         """
-        matrix = self._generate_matrix()
+        matrix = self._generate_matrix_from_tiles()
 
         # Walk through the matrix from the top left to the bottom right,
         # painting pixels as we go.
@@ -327,15 +344,17 @@ class TileManager(object):
 
     def data(self, in_data):
         """
-        Takes ``in_data`` and sends it to all the registered tiles.
-
-        All tiles which receive the incoming data are expected to set their
-        own pixel colors based on the data contents.
+        Takes ``in_data`` and sends it to all the registered tiles.  The data
+        will not be sent to any tile which has its ``is_accepting_data``
+        attribute set to ``False``.
 
         :param in_data: (any) Input data.
         """
         for tile in self._tiles:
-            tile['handler'].data(in_data)
+            tile_handler = tile['handler']
+
+            if tile_handler.is_accepting_data:
+                tile_handler.data(in_data)
 
     def draw_matrix(self):
         """
@@ -424,4 +443,4 @@ class TileManager(object):
         A two-dimensional list which contains the color of each neopixel in the
         matrix.
         """
-        return self._generate_matrix()
+        return self._generate_matrix_from_tiles()

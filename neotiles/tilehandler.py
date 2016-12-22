@@ -13,10 +13,23 @@ class TileHandler(object):
 
     **This class will normally be subclassed to implement more useful
     data-based pixel coloring.**  Subclasses will usually override the
-    :meth:`data` method to process the incoming data and then call the
-    :meth:`set_pixel` method to set the color of each pixel in the tile.
+    :meth:`draw` method to process the data last sent to the tile and then call
+    the :meth:`set_pixel` method to set the color of each pixel in the tile.
+
+    **Animating tiles:**
+
+    If ``animate=True`` then the tile handler's :meth:`draw` method will be
+    called for every frame by the :class:`~TileManager` that the tile is
+    registered with.
+
+    Tiles will only animate if ``animate=True`` and if the tile's TileManager
+    has set its ``anim_fps``.
+
+    **Tile size:**
+
     Subclasses can access their tile size via the :attr:`size` attribute
-    (a :class:`TileSize` object).
+    (a :class:`TileSize` object).  This is useful when drawing the tile as
+    the :meth:`draw` method needs to know the dimensions of the tile.
 
     Tiles are assigned their :attr:`size` from the :class:`~TileManager` object
     that they're registered with (see :meth:`TileManager.register_tile`).
@@ -27,13 +40,16 @@ class TileHandler(object):
     :param default_color: (:class:`PixelColor`) Default color for all pixels in
         the tile.
     """
-    def __init__(self, default_color=None):
+    def __init__(self, default_color=None, animate=False):
         self._default_color = PixelColor(
             red=random.random(),
             green=random.random(),
             blue=random.random(),
             white=random.random()
         )
+
+        self.animate = animate
+        self._is_accepting_data = True
 
         if default_color:
             self.default_color = default_color
@@ -64,7 +80,14 @@ class TileHandler(object):
             for row in range(self._size.rows)
         ]
 
-    def data(self, in_data):
+    def clear(self):
+        """
+        Clears the tile (sets all tile pixels to ``PixelColor(0, 0, 0, 0)``).
+        """
+        self._init_pixels(color=PixelColor(0, 0, 0, 0))
+
+    @property
+    def data(self):
         """
         Sends new data to the tile.
 
@@ -100,7 +123,17 @@ class TileHandler(object):
 
         :param in_data: (all) The data to send to the tile.
         """
-        self._data = in_data
+        return self._data
+
+    @data.setter
+    def data(self, in_data):
+        if self.is_accepting_data:
+            self._data = in_data
+
+    def draw(self):
+        """
+        """
+        self._init_pixels()
 
     def set_pixel(self, pos, color):
         """
@@ -110,13 +143,11 @@ class TileHandler(object):
         :param color: (:class:`~PixelColor`) Color to assign.
         """
         pos = PixelPosition(*pos)
-        self._pixels[pos.y][pos.x] = color
 
-    def clear(self):
-        """
-        Clears the tile (sets all tile pixels to ``PixelColor(0, 0, 0, 0)``).
-        """
-        self._init_pixels(color=PixelColor(0, 0, 0, 0))
+        try:
+            self._pixels[pos.y][pos.x] = color
+        except IndexError:
+            pass
 
     @property
     def default_color(self):
@@ -132,6 +163,12 @@ class TileHandler(object):
     @default_color.setter
     def default_color(self, color):
         self._default_color = color
+
+    @property
+    def is_accepting_data(self):
+        """
+        """
+        return self._is_accepting_data
 
     @property
     def pixels(self):
