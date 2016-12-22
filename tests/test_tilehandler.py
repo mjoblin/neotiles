@@ -109,7 +109,7 @@ class TestTileHandler:
         Test sending different types of data to the hander.
         """
         for some_data in [99, 'something', [1, 2, 3], {'a': 1, 'b': 2}]:
-            default_handler.data(some_data)
+            default_handler.data = some_data
             assert default_handler._data is some_data
 
     def test_repr(self):

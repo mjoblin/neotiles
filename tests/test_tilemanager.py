@@ -29,7 +29,7 @@ class TestTileManager:
         tm = TileManager(size=(10, 5), led_pin=18)
         assert isinstance(tm.size, TileSize) is True
         assert tm.size == (10, 5)
-        assert tm.brightness == 16
+        assert tm.brightness == 64
         assert len(tm.tiles) == 0
         assert len(tm.tile_handlers) == 0
 
@@ -108,7 +108,7 @@ class TestTileManager:
         Test setting the brightness attribute.
         """
         tm = TileManager(size=(3, 2), led_pin=18)
-        assert tm.brightness == 16
+        assert tm.brightness == 64
         tm.brightness = 100
         assert tm.brightness == 100
 
@@ -146,7 +146,7 @@ class TestTileManager:
         tm = TileManager(size=(3, 2), led_pin=18)
         assert repr(tm) == (
             'TileManager(size=TileSize(cols=3, rows=2), led_pin=18, '
-            'led_freq_hz=800000, led_dma=5, led_brightness=16, '
+            'led_freq_hz=800000, led_dma=5, led_brightness=64, '
             'led_invert=False, strip_type=ws.WS2811_STRIP_GRB)'
         )
 

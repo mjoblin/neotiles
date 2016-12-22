@@ -24,6 +24,7 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 # TODO: Check that tests are testing method arguments
 # TODO: Add hardware_matrix attribute to docs
 # TODO: Move exceptions to exceptions.*
+# TODO: Change TileManager.data to be an attr to match TileHandler.data
 
 
 class StoppableThread(threading.Thread):
@@ -354,7 +355,7 @@ class TileManager(object):
             tile_handler = tile['handler']
 
             if tile_handler.is_accepting_data:
-                tile_handler.data(in_data)
+                tile_handler.data = in_data
 
     def draw_matrix(self):
         """
