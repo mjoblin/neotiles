@@ -89,10 +89,6 @@ def main():
     tiles.register_tile(size=(8, 7), root=(0, 0), handler=text_tile)
     tiles.register_tile(size=(8, 1), root=(0, 7), handler=progress_tile)
 
-    # TODO: Having to clear is annoying.
-    text_tile.clear()
-    progress_tile.clear()
-
     # Kick off the matrix animation loop.
     tiles.draw_matrix()
 

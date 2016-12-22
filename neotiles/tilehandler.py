@@ -41,18 +41,28 @@ class TileHandler(object):
         the tile.
     """
     def __init__(self, default_color=None, animate=False):
-        self._default_color = PixelColor(
-            red=random.random(),
-            green=random.random(),
-            blue=random.random(),
-            white=random.random()
-        )
+        # Set the default color to something random if we're not a subclass
+        # of TileHandler.  This is intended to be helpful in the super simple
+        # case where TileHandler isn't being subclassed and we want to as least
+        # see *something* being displayed with as little setup as possible.
+        # If we don't do this then subclasses will flash a random color before
+        # they start rendering their own pixels, and being forced to call
+        # clear() is a bit messy.
+        if self.__class__.__name__ == 'TileHandler':
+            self._default_color = PixelColor(
+                red=random.random(),
+                green=random.random(),
+                blue=random.random(),
+                white=random.random()
+            )
+        else:
+            self._default_color = PixelColor(0, 0, 0, 0)
+
+        if default_color:
+            self._default_color = default_color
 
         self.animate = animate
         self._is_accepting_data = True
-
-        if default_color:
-            self.default_color = default_color
 
         self._size = None
         self._pixels = None
