@@ -2,7 +2,7 @@
 
 from collections import deque
 
-from neotiles import TileManager, PixelColor, TileHandler, TilePosition, TileSize
+from neotiles import TileManager, PixelColor, Tile, TilePosition, TileSize
 from netdumplings import DumplingEater
 
 
@@ -30,7 +30,7 @@ class Simplemovingaverage():
         return average
 
 
-class PacketCountIntensityTile(TileHandler):
+class PacketCountIntensityTile(Tile):
     def __init__(self, protocol='TCP', max_color=None, avg_intensity=0.5):
         """
 
@@ -38,8 +38,7 @@ class PacketCountIntensityTile(TileHandler):
         :param max_color:
         :param avg_intensity:
         """
-        super().__init__(default_color=PixelColor(0, 0, 0))
-        self.clear()
+        super().__init__()
 
         self._protocol = protocol
         self._max_color = max_color
@@ -49,15 +48,13 @@ class PacketCountIntensityTile(TileHandler):
         self._packet_history_far = Simplemovingaverage(period=60)
         self._packet_history_near = Simplemovingaverage(period=5)
 
-    def data(self, in_data):
+    def draw(self):
         """
 
         :param in_data:
         :return:
         """
-        super().data(in_data)
-
-        packet_count = in_data['payload']['packet_counts'][self._protocol]
+        packet_count = self.data['payload']['packet_counts'][self._protocol]
 
         if self._last_count > -1:
             packet_increment = packet_count - self._last_count
@@ -104,14 +101,16 @@ class Packtrix:
         ip6_intensity = PacketCountIntensityTile(
             protocol='IPv6', max_color=PixelColor(0, 0, 1))
 
-        self.neotiles = TileManager(size=(8, 8), led_pin=18)
+        self.neotiles = TileManager(size=(8, 8), led_pin=18, draw_fps=10)
         print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
-            size=TileSize(8, 4), root=TilePosition(0, 0), handler=tcp_intensity)
+            size=TileSize(8, 4), root=TilePosition(0, 0), tile=tcp_intensity)
         self.neotiles.register_tile(
-            size=TileSize(8, 2), root=TilePosition(0, 4), handler=udp_intensity)
+            size=TileSize(8, 2), root=TilePosition(0, 4), tile=udp_intensity)
         self.neotiles.register_tile(
-            size=TileSize(8, 2), root=TilePosition(0, 6), handler=ip6_intensity)
+            size=TileSize(8, 2), root=TilePosition(0, 6), tile=ip6_intensity)
+
+        self.neotiles.draw_hardware_matrix()
 
     async def on_dumpling(self, dumpling):
         """
@@ -119,11 +118,13 @@ class Packtrix:
         :param dumpling:
         :return:
         """
-        for tile_handler in self.neotiles.tile_handlers:
-            tile_handler.data(dumpling)
+        for tile_object in self.neotiles.tile_objects:
+            tile_object.data = dumpling
+            tile_object.draw()
+
+#        self.neotiles.data(dumpling)
 
         print('{}\n'.format(self.neotiles))
-        self.neotiles.draw_matrix()
 
     def run(self):
         """
@@ -131,6 +132,7 @@ class Packtrix:
         :return:
         """
         self.dumpling_eater.run()
+        self.neotiles.draw_stop()
 
     def clear(self):
         self.neotiles.clear()

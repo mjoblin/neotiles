@@ -2,7 +2,7 @@ import random
 import time
 
 from neotiles import (
-    TileManager, PixelColor, TileHandler, TilePosition, TileSize)
+    TileManager, PixelColor, Tile, TilePosition, TileSize)
 
 
 # Set these defaults to match your specific hardware.  You may also need to
@@ -11,7 +11,7 @@ TILE_SIZE = TileSize(8, 8)
 LED_PIN = 18
 
 
-class SpeckledTile(TileHandler):
+class SpeckledTile(Tile):
     """
     Defines a tile which receives a PixelColor as input data, and sets all its
     pixels to that color multiplied by an intensity picked randomly between
@@ -41,20 +41,20 @@ def main():
     # Initialize an 8x8 matrix, animating at 10 frames per second.
     tiles = TileManager(TILE_SIZE, LED_PIN, draw_fps=10)
 
-    # Create three tile handlers based on our SpeckledTile class.  Handlers are
-    # told their dimensions later.  We enable animation on the first tile only.
+    # Create three tiles based on our SpeckledTile class.  Tiles are told their
+    # dimensions later.  We enable animation on the first tile only.
     speckled_tile_1 = SpeckledTile(animate=True)
     speckled_tile_2 = SpeckledTile(animate=False)
     speckled_tile_3 = SpeckledTile(animate=False)
 
-    # Assign the 3 tile handlers to the tile manager.  This is when the
-    # tiles will be given their dimensions.
-    tiles.register_tile(size=(4, 4), root=(0, 0), handler=speckled_tile_1)
-    tiles.register_tile(size=(4, 4), root=(4, 0), handler=speckled_tile_2)
-    tiles.register_tile(size=(8, 4), root=(0, 4), handler=speckled_tile_3)
+    # Assign the 3 tiles to the tile manager.  This is when the tiles will be
+    # given their dimensions.
+    tiles.register_tile(size=(4, 4), root=(0, 0), tile=speckled_tile_1)
+    tiles.register_tile(size=(4, 4), root=(4, 0), tile=speckled_tile_2)
+    tiles.register_tile(size=(8, 4), root=(0, 4), tile=speckled_tile_3)
 
     # Kick off the matrix animation loop.
-    tiles.draw_matrix()
+    tiles.draw_hardware_matrix()
 
     try:
         while True:
@@ -70,7 +70,7 @@ def main():
 
             # We only want the base color to update once per second.  The
             # first tile will randomly animate its pixel intensities during
-            # this one-second interval (see "animate=True" on the handler).
+            # this one-second interval (see "animate=True" on the tile).
             time.sleep(1)
     except KeyboardInterrupt:
         tiles.draw_stop()

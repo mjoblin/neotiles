@@ -2,7 +2,7 @@ import random
 import time
 
 from bitmapfont.bitmapfont import BitmapFont
-from neotiles import PixelColor, TileManager, TileHandler, TileSize
+from neotiles import PixelColor, TileManager, Tile, TileSize
 
 
 # Set these defaults to match your specific hardware.  You may also need to
@@ -11,7 +11,7 @@ TILE_SIZE = TileSize(8, 8)
 LED_PIN = 18
 
 
-class TextScrollerTile(TileHandler):
+class TextScrollerTile(Tile):
     """
     """
     def __init__(self, *args, **kwargs):
@@ -65,7 +65,7 @@ class TextScrollerTile(TileHandler):
             self._is_accepting_data = True
 
 
-class TextScrollProgressTile(TileHandler):
+class TextScrollProgressTile(Tile):
     def draw(self):
         if self.data is None:
             return
@@ -86,11 +86,11 @@ def main():
     text_tile = TextScrollerTile(animate=True)
     progress_tile = TextScrollProgressTile(animate=True)
 
-    tiles.register_tile(size=(8, 7), root=(0, 0), handler=text_tile)
-    tiles.register_tile(size=(8, 1), root=(0, 7), handler=progress_tile)
+    tiles.register_tile(size=(8, 7), root=(0, 0), tile=text_tile)
+    tiles.register_tile(size=(8, 1), root=(0, 7), tile=progress_tile)
 
     # Kick off the matrix animation loop.
-    tiles.draw_matrix()
+    tiles.draw_hardware_matrix()
 
     try:
         while True:

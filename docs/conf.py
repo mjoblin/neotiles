@@ -368,7 +368,7 @@ def linkcode_resolve(domain, info):
     if info['fullname'] in [
             'TileManager', 'TilePosition', 'TileSize', 'PixelPosition']:
         filename = 'tilemanager'
-    elif info['fullname'] == 'TileHandler':
+    elif info['fullname'] == 'Tile':
         filename = 'tilehandler'
     elif info['fullname'] == 'PixelColor':
         filename = 'pixelcolor'

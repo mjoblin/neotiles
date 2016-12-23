@@ -1,11 +1,11 @@
 import pytest
 
-from neotiles import TileManager, TileHandler
+from neotiles import TileManager, Tile
 
 
 @pytest.fixture
-def default_handler():
-    return TileHandler()
+def default_tile():
+    return Tile()
 
 
 @pytest.fixture
