@@ -36,6 +36,7 @@ class TextScrollerTile(Tile):
         # number of pixels the text has to scroll through.
         self._display_width = None
 
+        # The number of pixel columns we've scrolled through.
         self._cols_displayed = None
 
         # The BitmapFont object used to draw the individual characters.

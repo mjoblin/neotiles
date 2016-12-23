@@ -26,6 +26,7 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 # TODO: Move exceptions to exceptions.*
 # TODO: Change TileManager.data to be an attr to match Tile.data
 # TODO: Default Tile animate=True?
+# TODO: Update the repo README
 
 
 class StoppableThread(threading.Thread):
