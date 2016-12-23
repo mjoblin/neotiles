@@ -42,11 +42,11 @@ class TestTileManager:
 
         # Register two tiles, making sure the tiles length looks good.
         manager_10x5.register_tile(
-            size=(4, 4), root=(0, 0), tile=red_tile)
+            tile=red_tile, size=(4, 4), root=(0, 0))
         assert len(manager_10x5.tiles) == 1
 
         manager_10x5.register_tile(
-            size=(4, 4), root=(4, 0), tile=grn_tile)
+            tile=grn_tile, size=(4, 4), root=(4, 0))
         assert len(manager_10x5.tiles) == 2
 
         # Check that the tiles dict looks good.
@@ -70,11 +70,11 @@ class TestTileManager:
 
         # Register two tiles, making sure the tiles length looks good.
         manager_10x5.register_tile(
-            size=(4, 4), root=(0, 0), tile=red_tile)
+            tile=red_tile, size=(4, 4), root=(0, 0))
         assert len(manager_10x5.tiles) == 1
 
         manager_10x5.register_tile(
-            size=(4, 4), root=(4, 0), tile=grn_tile)
+            tile=grn_tile, size=(4, 4), root=(4, 0))
         assert len(manager_10x5.tiles) == 2
 
         # Deregister each tile.
@@ -92,9 +92,9 @@ class TestTileManager:
         grn_tile = Tile(default_color=PixelColor(0, 128, 0))
 
         manager_10x5.register_tile(
-            size=(4, 4), root=(0, 0), tile=red_tile)
+            tile=red_tile, size=(4, 4), root=(0, 0))
         manager_10x5.register_tile(
-            size=(4, 4), root=(4, 0), tile=grn_tile)
+            tile=grn_tile, size=(4, 4), root=(4, 0))
 
         data = 'some data'
         manager_10x5.data(data)
@@ -126,7 +126,7 @@ class TestTileManager:
         pixel = PixelColor(128, 0, 0, 0)
         red_tile = Tile(default_color=pixel)
         manager_10x5.register_tile(
-            size=(10, 5), root=(0, 0), tile=red_tile)
+            tile=red_tile, size=(10, 5), root=(0, 0))
 
         # Ensure we have the right number of cols and rows, and ensure that
         # each pixel is correct.
@@ -161,7 +161,7 @@ class TestTileManager:
 
         # Test with RGB.
         red_tile = Tile(default_color=PixelColor(128, 0, 0))
-        tm.register_tile(size=(3, 2), root=(0, 0), tile=red_tile)
+        tm.register_tile(tile=red_tile, size=(3, 2), root=(0, 0))
         assert str(tm) == (
             '[ 0] 128,  0,  0  [ 1] 128,  0,  0  [ 2] 128,  0,  0  \n'
             '[ 3] 128,  0,  0  [ 4] 128,  0,  0  [ 5] 128,  0,  0'
@@ -169,7 +169,7 @@ class TestTileManager:
 
         # Test with RGBW.
         red_tile = Tile(default_color=PixelColor(128, 1, 2, 3))
-        tm.register_tile(size=(3, 2), root=(0, 0), tile=red_tile)
+        tm.register_tile(tile=red_tile, size=(3, 2), root=(0, 0))
         assert str(tm) == (
             '[ 0] 128,  1,  2,  3  [ 1] 128,  1,  2,  3  [ 2] 128,  1,  2,  3  \n'
             '[ 3] 128,  1,  2,  3  [ 4] 128,  1,  2,  3  [ 5] 128,  1,  2,  3'
@@ -177,7 +177,7 @@ class TestTileManager:
 
         # Test normalized RGB.
         red_tile = Tile(default_color=PixelColor(1.0, 0, 0.5))
-        tm.register_tile(size=(3, 2), root=(0, 0), tile=red_tile)
+        tm.register_tile(tile=red_tile, size=(3, 2), root=(0, 0))
         assert str(tm) == (
             '[ 0] 255,  0,127  [ 1] 255,  0,127  [ 2] 255,  0,127  \n'
             '[ 3] 255,  0,127  [ 4] 255,  0,127  [ 5] 255,  0,127'

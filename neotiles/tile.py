@@ -59,13 +59,13 @@ class Tile(object):
         if default_color:
             self._default_color = default_color
 
-        self.animate = animate
+        self._animate = False
         self._is_accepting_data = True
-
         self._size = None
-        self._pixels = None
         self._data = None
+        self._pixels = None
 
+        self.animate = animate
         self.size = TileSize(1, 1)
 
     def __repr__(self):
@@ -90,8 +90,9 @@ class Tile(object):
 
     def clear(self):
         """
-        Clears the tile by setting all tile pixels to
-        ``PixelColor(0, 0, 0, 0)``.
+        Clears the tile by setting all tile's pixels to
+        ``PixelColor(0, 0, 0, 0)``.  This does not update the pixels on the
+        hardware neopixel matrix.
         """
         self._init_pixels(color=PixelColor(0, 0, 0, 0))
 
@@ -151,6 +152,23 @@ class Tile(object):
             pass
 
     @property
+    def animate(self):
+        """
+        Whether the tile is animating or not.
+
+        Setting this attribute to True will result in the TileManager calling
+        the tile's :meth:`draw` method for every frame it its animation loop.
+        """
+        return self._animate
+
+    @animate.setter
+    def animate(self, val):
+        if val is not True and val is not False:
+            raise ValueError('animate must be set to True or False')
+
+        self._animate = val
+
+    @property
     def data(self):
         """
         Sends new data to the tile.
@@ -160,8 +178,8 @@ class Tile(object):
         TileManager object the tile is registered with.
 
         The data assigned to the ``data`` attribute can be anything, so long as
-        the Tile object knows how to interpret it (usually in the :meth:`draw`
-        method).
+        the Tile object knows how to interpret it (which it usually does in the
+        :meth:`draw` method).
         """
         return self._data
 
@@ -190,13 +208,24 @@ class Tile(object):
         """
         True if the tile is willing to accept new data on the :attr:`data`
         attribute, otherwise False.
+
+        You can set this attribute to False if you want your tile to ignore
+        any attempts to update its data before it's finished any longer-term
+        rendering task it might be working on.
         """
         return self._is_accepting_data
+
+    @is_accepting_data.setter
+    def is_accepting_data(self, val):
+        if val is not True and val is not False:
+            raise ValueError('is_accepting_data must be set to True or False')
+
+        self._is_accepting_data = val
 
     @property
     def pixels(self):
         """
-        A two-dimensional list which contains the color of each neopixel in the
+        A two-dimensional list which contains the color of each pixel in the
         tile.
 
         :getter: ([[:class:`~PixelColor`, ...], ...]) Returns a two-dimensional

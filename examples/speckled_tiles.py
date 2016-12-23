@@ -38,7 +38,7 @@ class SpeckledTile(Tile):
 # -----------------------------------------------------------------------------
 
 def main():
-    # Initialize an 8x8 matrix, animating at 10 frames per second.
+    # Initialize our matrix, animating at 10 frames per second.
     tiles = TileManager(TILE_SIZE, LED_PIN, draw_fps=10)
 
     # Create three tiles based on our SpeckledTile class.  Tiles are told their
@@ -49,9 +49,12 @@ def main():
 
     # Assign the 3 tiles to the tile manager.  This is when the tiles will be
     # given their dimensions.
-    tiles.register_tile(size=(4, 4), root=(0, 0), tile=speckled_tile_1)
-    tiles.register_tile(size=(4, 4), root=(4, 0), tile=speckled_tile_2)
-    tiles.register_tile(size=(8, 4), root=(0, 4), tile=speckled_tile_3)
+
+    # NOTE: This assumes an 8x8 matrix.  Tweak these values for a different-
+    # sized matrix.
+    tiles.register_tile(speckled_tile_1, size=(4, 4), root=(0, 0))
+    tiles.register_tile(speckled_tile_2, size=(4, 4), root=(4, 0))
+    tiles.register_tile(speckled_tile_3, size=(8, 4), root=(0, 4))
 
     # Kick off the matrix animation loop.
     tiles.draw_hardware_matrix()

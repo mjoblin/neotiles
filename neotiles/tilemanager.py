@@ -48,40 +48,39 @@ class StoppableThread(threading.Thread):
 
 class TileManager(object):
     """
-    Manages all the tiles displayed in a neopixel matrix.
+    Manages all the tiles displayed on a hardware neopixel matrix.
 
-    You must specify a ``size`` (e.g. ``(8, 8)``) and ``led_pin`` (e.g.
-    ``18``).  The other parameters can usually be left at their defaults.  For
-    more information on the other parameters look at the ``Adafruit_NeoPixel``
-    class in the ``neopixel`` module.
+    You must specify a ``size`` matching your neopixel matrix (e.g. ``(8, 8)``)
+    as well as the ``led_pin`` that you're using to talk to it (e.g. ``18``).
+    The other parameters can usually be left at their defaults.  For more
+    information on the other parameters look at the ``Adafruit_NeoPixel`` class
+    in the ``neopixel`` module.
 
     If your RGB values appear to be mixed up (for example, red is showing as
     green) then try using a different ``strip_type``.  You can see a list of
     valid strip type constants here (look for ``_STRIP_`` in the constant
-    name): https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html
-
-    Specify a strip type like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For
-    this to work you'll need to ``import ws`` (which comes with the
-    ``neopixel`` module) into your code.
+    name): https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html.  Specify a strip
+    type like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For this to work
+    you'll need to ``import ws`` (which comes with the ``neopixel`` module)
+    into your code.
 
     **Animation**:
 
     The ``draw_fps`` (draw frames per second) parameter controls how many times
-    per second the animation loop (which runs in a separate thread) will call
-    :meth:`draw_hardware_matrix`.  If ``draw_fps=None`` then the matrix will
-    not be drawn automatically and you must call :meth:`draw_hardware_matrix`
-    manually.
+    per second the animation loop -- which runs in a separate thread -- will
+    call :meth:`draw_hardware_matrix`.  If ``draw_fps=None`` then the matrix
+    will not be drawn automatically and you must call
+    :meth:`draw_hardware_matrix` manually.
 
     The animation loop will attempt to re-draw the matrix at a rate of
     ``draw_fps`` times per second.  This rate may or may not be achieved
     depending on what else the CPU is doing, including the compute load created
-    by the tiles' :meth:`Tile.data` methods.
+    by the tiles' :meth:`Tile.draw` methods.
 
     The animation loop assumes that something else will be sending data to the
-    tile (via the :meth:`Tile.data` or :meth:`TileManager.data` methods), which
-    are then updating their tile's pixel colors.  If that isn't happening then
-    the animation loop will likely keep re-drawing the matrix with the same
-    pixel colors.
+    tile (via the :attr:`Tile.data` attribute or the :meth:`TileManager.data`
+    method).  If that isn't happening then the animation loop will likely keep
+    re-drawing the matrix with the same pixel colors.
 
     :param size: (:class:`TileSize`) Size (in cols and rows) of the neopixel
         matrix.
@@ -296,12 +295,13 @@ class TileManager(object):
     def register_tile(
             self, tile, size=None, root=None, draw_hardware_matrix=False):
         """
-        Registers a tile with the tile manager.
+        Registers a tile with the TileManager.  Registering a tile allows
+        its pixels to be drawn by the TileManager to the hardware matrix.
 
         :param tile: (:class:`Tile`) The tile to register.
         :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
         :param root: (:class:`TilePosition`) Position of the top left corner
-            of the tile within the neopixel matrix.
+            of the tile within the hardware matrix.
         :param draw_hardware_matrix: (bool) Whether to draw the matrix after
             registering the tile.
         """
@@ -317,7 +317,8 @@ class TileManager(object):
 
     def deregister_tile(self, tile, draw_hardware_matrix=False):
         """
-        Deregisters a tile from the tile manager.
+        Deregisters a tile from the tile manager.  Deregistered tiles will
+        no longer be drawn to the hardware matrix.
 
         If deregistering the tile results in no tiles being registered with
         the manager, then the matrix-drawing animation loop will be stopped
@@ -359,13 +360,13 @@ class TileManager(object):
 
     def draw_hardware_matrix(self):
         """
-        Draw the tiles to the hardware matrix.
+        Draws each registered tile's pixels to the hardware matrix.
 
         Each tile's pixel colors are retrieved via the tile's :meth:`Tile.draw`
         method before being drawn (in the correct position) on the actual
         hardware matrix.
 
-        If the ``draw_fps`` attribute (set at TileManager instantiation) is
+        If the TileManager's ``draw_fps`` attribute (set at instantiation) is
         not ``None`` then this method will also trigger the animation loop if
         it's not already running.
         """
@@ -386,19 +387,15 @@ class TileManager(object):
             self._animation_thread.join()
             self._animation_thread = None
 
-    def clear(self, draw_hardware_matrix=True):
+    def clear(self):
         """
-        Clears the neopixel matrix (sets all pixels to
+        Clears the hardware matrix (sets all pixels to
         ``PixelColor(0, 0, 0, 0)``).
-
-        :param draw_hardware_matrix: (bool) Whether to draw the cleared pixels
-            to the neopixel matrix.
         """
         for pixel_num in range(self._led_count):
             self.hardware_matrix.setPixelColor(pixel_num, 0)
 
-        if draw_hardware_matrix:
-            self.hardware_matrix.show()
+        self.hardware_matrix.show()
 
     @property
     def brightness(self):
@@ -444,7 +441,8 @@ class TileManager(object):
     @property
     def pixels(self):
         """
-        A two-dimensional list which contains the color of each neopixel in the
-        matrix.
+        A two-dimensional list (with the same dimensions as
+        :attr:`TileManager.size`) which contains the current PixelColors of
+        all the tiles being managed by the TileManager.
         """
         return self._generate_matrix_from_tiles()
