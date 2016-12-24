@@ -38,7 +38,7 @@ class Tile(object):
     :param default_color: (:class:`PixelColor`) Default color for all pixels in
         the tile.
     """
-    def __init__(self, default_color=None, animate=False):
+    def __init__(self, default_color=None, animate=True):
         # Set the default color to something random if we're not a subclass
         # of Tile.  This is intended to be helpful in the super simple case
         # where Tile isn't being subclassed and we want to as least see
@@ -59,7 +59,7 @@ class Tile(object):
         if default_color:
             self._default_color = default_color
 
-        self._animate = False
+        self._animate = True
         self._is_accepting_data = True
         self._size = None
         self._data = None
@@ -173,8 +173,8 @@ class Tile(object):
         """
         Sends new data to the tile.
 
-        This attribute can either be set manually, or will be called
-        automatically via the :meth:`TileManager.data` method on the
+        This attribute can either be set manually, or will be set automatically
+        via the :meth:`TileManager.send_data_to_tiles` method on the
         TileManager object the tile is registered with.
 
         The data assigned to the ``data`` attribute can be anything, so long as
@@ -210,7 +210,7 @@ class Tile(object):
         attribute, otherwise False.
 
         You can set this attribute to False if you want your tile to ignore
-        any attempts to update its data before it's finished any longer-term
+        any attempts to update its data before it has finished any longer-term
         rendering task it might be working on.
         """
         return self._is_accepting_data

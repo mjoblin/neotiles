@@ -77,7 +77,7 @@ def main():
             time.sleep(1)
     except KeyboardInterrupt:
         tiles.draw_stop()
-        tiles.clear()
+        tiles.clear_hardware_matrix()
 
 
 # =============================================================================

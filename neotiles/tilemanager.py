@@ -27,6 +27,8 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 # TODO: Change TileManager.data to be an attr to match Tile.data
 # TODO: Default Tile animate=True?
 # TODO: Update the repo README
+# TODO: Rename tiles to tiles_meta and tile_objects to tiles
+# TODO: Boost test coverage
 
 
 class StoppableThread(threading.Thread):
@@ -51,11 +53,16 @@ class TileManager(object):
     """
     Manages all the tiles displayed on a hardware neopixel matrix.
 
+    TileManager is the only class in neotiles which affects the actual neopixel
+    hardware matrix.
+
     You must specify a ``size`` matching your neopixel matrix (e.g. ``(8, 8)``)
     as well as the ``led_pin`` that you're using to talk to it (e.g. ``18``).
     The other parameters can usually be left at their defaults.  For more
     information on the other parameters look at the ``Adafruit_NeoPixel`` class
-    in the ``neopixel`` module.
+    in the
+    `neopixel <https://github.com/jgarff/rpi_ws281x/tree/master/python>`_
+    module.
 
     If your RGB values appear to be mixed up (for example, red is showing as
     green) then try using a different ``strip_type``.  You can see a list of
@@ -69,9 +76,10 @@ class TileManager(object):
 
     The ``draw_fps`` (draw frames per second) parameter controls how many times
     per second the animation loop -- which runs in a separate thread -- will
-    call :meth:`draw_hardware_matrix`.  If ``draw_fps=None`` then the matrix
-    will not be drawn automatically and you must call
-    :meth:`draw_hardware_matrix` manually.
+    call :meth:`draw_hardware_matrix` which in turn calls all the tiles'
+    :meth:`Tile.draw` methods.  If ``draw_fps=None`` then the matrix will not
+    be drawn automatically and you must call :meth:`draw_hardware_matrix`
+    manually.
 
     The animation loop will attempt to re-draw the matrix at a rate of
     ``draw_fps`` times per second.  This rate may or may not be achieved
@@ -79,9 +87,10 @@ class TileManager(object):
     by the tiles' :meth:`Tile.draw` methods.
 
     The animation loop assumes that something else will be sending data to the
-    tile (via the :attr:`Tile.data` attribute or the :meth:`TileManager.data`
-    method).  If that isn't happening then the animation loop will likely keep
-    re-drawing the matrix with the same pixel colors.
+    tiles via the :attr:`Tile.data` attribute or the
+    :meth:`TileManager.send_data_to_tiles` method.  If that isn't happening
+    then the animation loop will likely keep re-drawing the matrix with the
+    same unchanging pixel colors.
 
     :param size: (:class:`TileSize`) Size (in cols and rows) of the neopixel
         matrix.
@@ -111,6 +120,9 @@ class TileManager(object):
         self._led_brightness = led_brightness
         self._led_invert = led_invert
         self._strip_type = strip_type
+
+        self._pixels = None
+        self._clear_pixels()
 
         self._led_count = self.size.cols * self.size.rows
         self._animation_thread = None
@@ -146,7 +158,7 @@ class TileManager(object):
         )
 
     def __str__(self):
-        matrix = self._generate_matrix_from_tiles()
+        matrix = self.pixels
 
         matrix_string = ''
         pixel_num = 0
@@ -187,7 +199,7 @@ class TileManager(object):
 
         return matrix_string.rstrip()
 
-    def _generate_empty_matrix(self):
+    def _clear_pixels(self):
         """
         Generate a 2D matrix for the given size of the neopixel matrix where
         all the pixels are set to off (0, 0, 0).
@@ -195,14 +207,12 @@ class TileManager(object):
         :return: ([[:class:`PixelColor`]]) 2D matrix of PixelColor objects all
             set to (0, 0, 0, 0).
         """
-        matrix = [
+        self._pixels = [
             [PixelColor(0, 0, 0, 0) for col in range(self.size.cols)]
             for row in range(self.size.rows)
         ]
 
-        return matrix
-
-    def _generate_matrix_from_tiles(self):
+    def _set_pixels_from_tiles(self):
         """
         Create a 2D matrix representing the entire pixel matrix, made up of
         each of the individual tiles' colors for each tile pixel.
@@ -211,7 +221,7 @@ class TileManager(object):
         :raises: :class:`NeoTilesError` if an attempt is made to render a
             pixel outside of the neopixel matrix's dimensions.
         """
-        matrix = self._generate_empty_matrix()
+        self._clear_pixels()
 
         # Set the matrix pixels to the colors of each tile in turn.  If any
         # tiles happen to overlap then the last one processed will win.
@@ -234,7 +244,7 @@ class TileManager(object):
                     matrix_col = managed_tile['root'].x + tile_col_num
 
                     try:
-                        matrix[matrix_row][matrix_col] = pixel_color
+                        self._pixels[matrix_row][matrix_col] = pixel_color
                     except IndexError:
                         raise NeoTilesError(
                             'Cannot render tile {}: pixel position ({}, {}) '
@@ -242,7 +252,6 @@ class TileManager(object):
                                 managed_tile, matrix_col, matrix_row,
                                 self.size.cols, self.size.rows
                             ))
-        return matrix
 
     def _draw_hardware_matrix(self):
         """
@@ -252,14 +261,14 @@ class TileManager(object):
         :raises: :class:`NeoTilesError` if an attempt is made to render a
             pixel outside of the neopixel matrix's dimensions.
         """
-        matrix = self._generate_matrix_from_tiles()
-
         # Walk through the matrix from the top left to the bottom right,
         # painting pixels as we go.
+        pixels = self.pixels
         pixel_num = 0
-        for row_num in range(len(matrix)):
-            for col_num in range(len(matrix[row_num])):
-                color = matrix[row_num][col_num]
+
+        for row_num in range(len(pixels)):
+            for col_num in range(len(pixels[row_num])):
+                color = pixels[row_num][col_num]
                 self.hardware_matrix.setPixelColor(
                     pixel_num, color.hardware_int)
                 pixel_num += 1
@@ -280,6 +289,7 @@ class TileManager(object):
             current_time = int(round(time.time() * 1000))
             if current_time > next_frame_time:
                 next_frame_time = current_time + frame_delay_millis
+                self._set_pixels_from_tiles()
                 self._draw_hardware_matrix()
 
             # The sleep time needs to be long enough that we're not churning
@@ -313,6 +323,11 @@ class TileManager(object):
             'tile_object': tile,
         })
 
+        # Set the tile manager's pixels based on this new tile.  A future
+        # optimization would be to only render the new tile onto the manager's
+        # pixels.
+        self._set_pixels_from_tiles()
+
         if draw_hardware_matrix:
             self.draw_hardware_matrix()
 
@@ -345,19 +360,19 @@ class TileManager(object):
 
         return removed
 
-    def data(self, in_data):
+    def send_data_to_tiles(self, data):
         """
-        Takes ``in_data`` and sends it to all the registered tiles.  The data
-        will not be sent to any tile which has its ``is_accepting_data``
-        attribute set to ``False``.
+        Sends ``data`` to all registered tiles.  The data will not be sent to
+        any tile which has its :attr:`Tile.is_accepting_data` attribute set to
+        ``False``.
 
-        :param in_data: (any) Input data.
+        :param data: (any) Input data.
         """
         for managed_tile in self._managed_tiles:
             tile_object = managed_tile['tile_object']
 
             if tile_object.is_accepting_data:
-                tile_object.data = in_data
+                tile_object.data = data
 
     def draw_hardware_matrix(self):
         """
@@ -372,6 +387,7 @@ class TileManager(object):
         it's not already running.
         """
         if self._draw_fps is None:
+            self._set_pixels_from_tiles()
             self._draw_hardware_matrix()
             return
 
@@ -388,7 +404,7 @@ class TileManager(object):
             self._animation_thread.join()
             self._animation_thread = None
 
-    def clear(self):
+    def clear_hardware_matrix(self):
         """
         Clears the hardware matrix (sets all pixels to
         ``PixelColor(0, 0, 0, 0)``).
@@ -424,20 +440,22 @@ class TileManager(object):
     @property
     def tiles(self):
         """
-        All registered tiles.  Read only.  Returned as a list of dictionaries
-        which contain the ``root``, and ``tile_object`` keys
-        (:class:`TilePosition` and :class:`Tile` objects respectively).
-        """
-        return self._managed_tiles
-
-    @property
-    def tile_objects(self):
-        """
-        All registered tile objects.  Read only.
+        All registered tiles.  Read only.
 
         :return: ([:class:`Tile`, ...]) Registered tile objects.
         """
         return [tile['tile_object'] for tile in self._managed_tiles]
+
+    @property
+    def tiles_meta(self):
+        """
+        All information on all registered tiles.  Read only.  Returned as a
+        list of dictionaries which contain the ``root``, and ``tile_object``
+        keys (:class:`TilePosition` and :class:`Tile` objects respectively).
+        If you just want the registered Tile instances then use :meth:`tiles`
+        instead.
+        """
+        return self._managed_tiles
 
     @property
     def pixels(self):
@@ -446,4 +464,4 @@ class TileManager(object):
         :attr:`TileManager.size`) which contains the current PixelColors of
         all the tiles being managed by the TileManager.
         """
-        return self._generate_matrix_from_tiles()
+        return self._pixels

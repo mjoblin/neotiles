@@ -38,7 +38,7 @@ class PacketCountIntensityTile(Tile):
         :param max_color:
         :param avg_intensity:
         """
-        super().__init__()
+        super().__init__(animate=False)
 
         self._protocol = protocol
         self._max_color = max_color
@@ -54,6 +54,9 @@ class PacketCountIntensityTile(Tile):
         :param in_data:
         :return:
         """
+        if self.data is None:
+            return
+
         packet_count = self.data['payload']['packet_counts'][self._protocol]
 
         if self._last_count > -1:
@@ -101,7 +104,7 @@ class Packtrix:
         ip6_intensity = PacketCountIntensityTile(
             protocol='IPv6', max_color=PixelColor(0, 0, 1))
 
-        self.neotiles = TileManager(size=(8, 8), led_pin=18, draw_fps=10)
+        self.neotiles = TileManager(size=(8, 8), led_pin=18, draw_fps=None)
         print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
             size=TileSize(8, 4), root=TilePosition(0, 0), tile=tcp_intensity)
@@ -110,19 +113,17 @@ class Packtrix:
         self.neotiles.register_tile(
             size=TileSize(8, 2), root=TilePosition(0, 6), tile=ip6_intensity)
 
-        self.neotiles.draw_hardware_matrix()
-
     async def on_dumpling(self, dumpling):
         """
 
         :param dumpling:
         :return:
         """
-        for tile_object in self.neotiles.tile_objects:
+        for tile_object in self.neotiles.tiles:
             tile_object.data = dumpling
             tile_object.draw()
 
-#        self.neotiles.data(dumpling)
+        self.neotiles.draw_hardware_matrix()
 
         print('{}\n'.format(self.neotiles))
 
@@ -135,7 +136,7 @@ class Packtrix:
         self.neotiles.draw_stop()
 
     def clear(self):
-        self.neotiles.clear()
+        self.neotiles.clear_hardware_matrix()
 
 
 def main():

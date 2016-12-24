@@ -30,8 +30,8 @@ class TestTileManager:
         assert isinstance(tm.size, TileSize) is True
         assert tm.size == (10, 5)
         assert tm.brightness == 64
+        assert len(tm.tiles_meta) == 0
         assert len(tm.tiles) == 0
-        assert len(tm.tile_objects) == 0
 
     def test_register_tile(self, manager_10x5):
         """
@@ -43,23 +43,23 @@ class TestTileManager:
         # Register two tiles, making sure the tiles length looks good.
         manager_10x5.register_tile(
             tile=red_tile, size=(4, 4), root=(0, 0))
-        assert len(manager_10x5.tiles) == 1
+        assert len(manager_10x5.tiles_meta) == 1
 
         manager_10x5.register_tile(
             tile=grn_tile, size=(4, 4), root=(4, 0))
-        assert len(manager_10x5.tiles) == 2
+        assert len(manager_10x5.tiles_meta) == 2
 
         # Check that the tiles dict looks good.
-        tiles = manager_10x5.tiles
+        tiles = manager_10x5.tiles_meta
         assert sorted(tiles[0].keys()) == ['root', 'tile_object']
         assert tiles[0]['tile_object'] == red_tile
         assert isinstance(tiles[0]['root'], TilePosition) is True
         assert tiles[0]['root'] == (0, 0)
 
         # Check that the tile_objects list looks OK.
-        assert len(manager_10x5.tile_objects) == 2
-        assert isinstance(manager_10x5.tile_objects[0], Tile) is True
-        assert isinstance(manager_10x5.tile_objects[1], Tile) is True
+        assert len(manager_10x5.tiles) == 2
+        assert isinstance(manager_10x5.tiles[0], Tile) is True
+        assert isinstance(manager_10x5.tiles[1], Tile) is True
 
     def test_deregister_tile(self, manager_10x5):
         """
@@ -71,18 +71,18 @@ class TestTileManager:
         # Register two tiles, making sure the tiles length looks good.
         manager_10x5.register_tile(
             tile=red_tile, size=(4, 4), root=(0, 0))
-        assert len(manager_10x5.tiles) == 1
+        assert len(manager_10x5.tiles_meta) == 1
 
         manager_10x5.register_tile(
             tile=grn_tile, size=(4, 4), root=(4, 0))
-        assert len(manager_10x5.tiles) == 2
+        assert len(manager_10x5.tiles_meta) == 2
 
         # Deregister each tile.
         manager_10x5.deregister_tile(red_tile)
-        assert len(manager_10x5.tiles) == 1
+        assert len(manager_10x5.tiles_meta) == 1
 
         manager_10x5.deregister_tile(grn_tile)
-        assert len(manager_10x5.tiles) == 0
+        assert len(manager_10x5.tiles_meta) == 0
 
     def test_data(self, manager_10x5):
         """
@@ -97,8 +97,8 @@ class TestTileManager:
             tile=grn_tile, size=(4, 4), root=(4, 0))
 
         data = 'some data'
-        manager_10x5.data(data)
-        for tile_object in manager_10x5.tile_objects:
+        manager_10x5.send_data_to_tiles(data)
+        for tile_object in manager_10x5.tiles:
             assert tile_object._data == data
 
     def test_brightness(self, manager_10x5):
@@ -123,8 +123,8 @@ class TestTileManager:
         """
         Test retrieving the pixel colors.
         """
-        pixel = PixelColor(128, 0, 0, 0)
-        red_tile = Tile(default_color=pixel)
+        red_pixel = PixelColor(128, 0, 0, 0)
+        red_tile = Tile(default_color=red_pixel)
         manager_10x5.register_tile(
             tile=red_tile, size=(10, 5), root=(0, 0))
 
@@ -135,7 +135,7 @@ class TestTileManager:
         for row in pixels:
             assert len(row) == 10
             for matrix_pixel in row:
-                assert matrix_pixel == pixel
+                assert matrix_pixel == red_pixel
 
     def test_repr(self):
         """
