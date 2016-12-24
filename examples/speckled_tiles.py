@@ -2,12 +2,12 @@ import random
 import time
 
 from neotiles import (
-    TileManager, PixelColor, Tile, TilePosition, TileSize)
+    MatrixSize, TileManager, PixelColor, Tile, TilePosition)
 
 
 # Set these defaults to match your specific hardware.  You may also need to
 # set the TileManager's strip_type parameter.
-TILE_SIZE = TileSize(8, 8)
+MATRIX_SIZE = MatrixSize(8, 8)
 LED_PIN = 18
 
 
@@ -39,7 +39,7 @@ class SpeckledTile(Tile):
 
 def main():
     # Initialize our matrix, animating at 10 frames per second.
-    tiles = TileManager(TILE_SIZE, LED_PIN, draw_fps=10)
+    tiles = TileManager(MATRIX_SIZE, LED_PIN, draw_fps=10)
 
     # Create three tiles based on our SpeckledTile class.  Tiles are told their
     # dimensions later.  We enable animation on the first tile only.

@@ -3,13 +3,15 @@ import threading
 import time
 
 from neopixel import Adafruit_NeoPixel, ws
+import wrapt
 
 from neotiles.exceptions import NeoTilesError
 from neotiles.pixelcolor import PixelColor
 
 
-TilePosition = namedtuple('TilePosition', 'x y')
+MatrixSize = namedtuple('MatrixSize', 'cols rows')
 TileSize = namedtuple('TileSize', 'cols rows')
+TilePosition = namedtuple('TilePosition', 'x y')
 PixelPosition = namedtuple('PixelPosition', 'x y')
 
 # TODO: Change getter/setter docs.
@@ -49,11 +51,11 @@ class TileManager(object):
     TileManager is the only class in neotiles which affects the actual neopixel
     hardware matrix.
 
-    You must specify a ``size`` matching your neopixel matrix (e.g. ``(8, 8)``)
-    as well as the ``led_pin`` that you're using to talk to it (e.g. ``18``).
-    The other parameters can usually be left at their defaults.  For more
-    information on the other parameters look at the ``Adafruit_NeoPixel`` class
-    in the
+    You must specify a ``matrix_size`` matching your neopixel matrix (e.g.
+    ``(8, 8)``) as well as the ``led_pin`` that you're using to talk to it
+    (e.g. ``18``). The other parameters can usually be left at their defaults.
+    For more information on the other parameters look at the
+    ``Adafruit_NeoPixel`` class in the
     `neopixel <https://github.com/jgarff/rpi_ws281x/tree/master/python>`_
     module.
 
@@ -64,6 +66,12 @@ class TileManager(object):
     like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For this to work you'll
     need to ``import ws`` (which comes with the ``neopixel`` module) into your
     code.
+
+    Example usage: ::
+
+        from neotiles import TileManager
+
+        tiles = TileManager(matrix_size=(8, 8), led_pin=18)
 
     **Animation**:
 
@@ -85,8 +93,7 @@ class TileManager(object):
     then the animation loop will likely keep re-drawing the matrix with the
     same unchanging pixel colors.
 
-    :param size: (:class:`TileSize`) Size (in cols and rows) of the neopixel
-        matrix.
+    :param matrix_size: (:class:`MatrixSize`) Size of the neopixel matrix.
     :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
     :param draw_fps: (int|None) The frame rate for the drawing animation loop.
     :param led_freq_hz: (int) LED frequency.
@@ -94,18 +101,18 @@ class TileManager(object):
     :param led_brightness: (int) Brightness of the matrix display (0-255).
     :param led_invert: (bool) Whether to invert the LEDs.
     :param strip_type: (int) Neopixel strip type.
-    :raises: :class:`exceptions.NeoTilesError` if ``size`` or ``led_pin`` are
-        not specified.
+    :raises: :class:`exceptions.NeoTilesError` if ``matrix_size`` or
+        ``led_pin`` are not specified.
     """
     def __init__(
-            self, size=None, led_pin=None, draw_fps=10, led_freq_hz=800000,
-            led_dma=5, led_brightness=64, led_invert=False,
+            self, matrix_size=None, led_pin=None, draw_fps=10,
+            led_freq_hz=800000, led_dma=5, led_brightness=64, led_invert=False,
             strip_type=ws.WS2811_STRIP_GRB):
 
-        if size is None or led_pin is None:
-            raise NeoTilesError('size and led_pin must be specified')
+        if matrix_size is None or led_pin is None:
+            raise NeoTilesError('matrix_size and led_pin must be specified')
 
-        self.size = TileSize(*size)
+        self._matrix_size = MatrixSize(*matrix_size)
         self._led_pin = led_pin
         self._draw_fps = draw_fps
         self._led_freq_hz = led_freq_hz
@@ -117,7 +124,7 @@ class TileManager(object):
         self._pixels = None
         self._clear_pixels()
 
-        self._led_count = self.size.cols * self.size.rows
+        self._led_count = self.matrix_size.cols * self.matrix_size.rows
         self._animation_thread = None
 
         # List of tiles we'll be displaying inside the matrix.
@@ -142,10 +149,10 @@ class TileManager(object):
                 strip_name = 'ws.{}'.format(strip_check)
 
         return (
-            '{}(size={}, led_pin={}, led_freq_hz={}, led_dma={}, '
+            '{}(matrix_size={}, led_pin={}, led_freq_hz={}, led_dma={}, '
             'led_brightness={}, led_invert={}, strip_type={})'
         ).format(
-            self.__class__.__name__, self.size, self._led_pin,
+            self.__class__.__name__, self.matrix_size, self._led_pin,
             self._led_freq_hz, self._led_dma, self._led_brightness,
             self._led_invert, strip_name
         )
@@ -201,10 +208,11 @@ class TileManager(object):
             set to (0, 0, 0, 0).
         """
         self._pixels = [
-            [PixelColor(0, 0, 0, 0) for col in range(self.size.cols)]
-            for row in range(self.size.rows)
+            [PixelColor(0, 0, 0, 0) for col in range(self.matrix_size.cols)]
+            for row in range(self.matrix_size.rows)
         ]
 
+    @wrapt.synchronized
     def _set_pixels_from_tiles(self):
         """
         Create a 2D matrix representing the entire pixel matrix, made up of
@@ -243,22 +251,20 @@ class TileManager(object):
                             'Cannot render tile {}: pixel position ({}, {}) '
                             'is invalid for {}x{} matrix'.format(
                                 managed_tile, matrix_col, matrix_row,
-                                self.size.cols, self.size.rows
+                                self.matrix_size.cols, self.matrix_size.rows
                             ))
 
+    @wrapt.synchronized
     def _draw_hardware_matrix(self):
         """
-        Retrieves the current pixel colors of all registered tiles and displays
-        them on the neopixel matrix.
-
-        :raises: :class:`NeoTilesError` if an attempt is made to render a
-            pixel outside of the neopixel matrix's dimensions.
+        Displays the current state of the matrix pixels on the neopixel
+        hardware.
         """
-        # Walk through the matrix from the top left to the bottom right,
-        # painting pixels as we go.
         pixels = self.pixels
         pixel_num = 0
 
+        # Walk through the matrix from the top left to the bottom right,
+        # painting pixels as we go.
         for row_num in range(len(pixels)):
             for col_num in range(len(pixels[row_num])):
                 color = pixels[row_num][col_num]
@@ -276,6 +282,10 @@ class TileManager(object):
         frame_delay_millis = int(1000 / self._draw_fps)
         current_time = int(round(time.time() * 1000))
         next_frame_time = current_time + frame_delay_millis
+
+        # Draw the first frame.  Not really necessary except perhaps for super
+        # slow frame rates.
+        self._set_pixels_from_tiles()
         self._draw_hardware_matrix()
 
         while True:
@@ -345,11 +355,11 @@ class TileManager(object):
                 del self._managed_tiles[i]
                 removed += 1
 
-        if draw_hardware_matrix:
-            self.draw_hardware_matrix()
-
         if len(self._managed_tiles) == 0:
             self.draw_stop()
+
+        if draw_hardware_matrix:
+            self.draw_hardware_matrix()
 
         return removed
 
@@ -375,10 +385,10 @@ class TileManager(object):
 
         If the TileManager's ``draw_fps`` attribute (set at instantiation) is
         not ``None`` then this method will also trigger the animation loop if
-        it's not already running.  This means that you only need to call this
-        method once if you've enable animation, as the animation loop will
-        ensure that this method is automatically invoked once per animation
-        frame.
+        it's not already running.  This means that you only need to call
+        ``draw_hardware_matrix`` once if you've enabled animation, as the
+        animation loop will ensure that the matrix is updated via each tile's
+        :meth:`Tile.draw` method once per animation frame.
         """
         if self._draw_fps is None:
             self._set_pixels_from_tiles()
@@ -411,10 +421,8 @@ class TileManager(object):
     @property
     def brightness(self):
         """
-        The brightness (between 0 and 255) of the matrix display.  Read/write.
-
-        :raises: ``ValueError`` if an attempt is made to set a brightness
-            outside of 0 and 255.
+        (int) Get or set the brightness (between 0 and 255) of the matrix
+        display.
         """
         return self._led_brightness
 
@@ -432,21 +440,29 @@ class TileManager(object):
             raise ValueError(error_msg)
 
     @property
+    def matrix_size(self):
+        """
+        (:class:`MatrixSize`) Get the size of the matrix.
+        """
+        return self._matrix_size
+
+    @property
     def tiles(self):
         """
-        All registered tiles.  Read only.
-
-        :return: ([:class:`Tile`, ...]) Registered tile objects.
+        Get all registered tiles as a list of :class:`Tile` objects.
         """
         return [tile['tile_object'] for tile in self._managed_tiles]
 
     @property
     def tiles_meta(self):
         """
-        All information on all registered tiles.  Read only.  Returned as a
-        list of dictionaries which contain the ``root``, and ``tile_object``
-        keys (:class:`TilePosition` and :class:`Tile` objects respectively).
-        If you just want the registered Tile instances then use :meth:`tiles`
+        Get all information on all registered tiles.
+
+        Tile information is returned as a list of dictionaries which contain
+        the ``root`` and ``tile_object`` keys (:class:`TilePosition` and
+        :class:`Tile` objects respectively).
+
+        If you just want the registered Tile instances then use :attr:`tiles`
         instead.
         """
         return self._managed_tiles
@@ -454,8 +470,11 @@ class TileManager(object):
     @property
     def pixels(self):
         """
-        A two-dimensional list (with the same dimensions as
-        :attr:`TileManager.size`) which contains the current PixelColors of
-        all the tiles being managed by the TileManager.
+        Get the tile manager's current pixel colors, which is a combination of
+        the current pixel colors of all the tiles being managed by the
+        TileManager.
+
+        The colors are returned as a two-dimensional list (with the same
+        dimensions as :attr:`matrix_size`) of :class:`~PixelColor` objects.
         """
         return self._pixels

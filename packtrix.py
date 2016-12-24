@@ -97,6 +97,10 @@ class Packtrix:
             on_dumpling=self.on_dumpling
         )
 
+        self.neotiles = TileManager(
+            matrix_size=(8, 8), led_pin=18, draw_fps=None)
+        print('Created: {}'.format(repr(self.neotiles)))
+
         tcp_intensity = PacketCountIntensityTile(
             protocol='TCP', max_color=PixelColor(1, 0, 0))
         udp_intensity = PacketCountIntensityTile(
@@ -104,8 +108,6 @@ class Packtrix:
         ip6_intensity = PacketCountIntensityTile(
             protocol='IPv6', max_color=PixelColor(0, 0, 1))
 
-        self.neotiles = TileManager(size=(8, 8), led_pin=18, draw_fps=None)
-        print('Created: {}'.format(repr(self.neotiles)))
         self.neotiles.register_tile(
             size=TileSize(8, 4), root=TilePosition(0, 0), tile=tcp_intensity)
         self.neotiles.register_tile(

@@ -9,6 +9,7 @@ packages = [package for package in find_packages()
 version = '0.0.1'
 
 install_requires = [
+    'wrapt',
 ]
 
 setup_requires = [

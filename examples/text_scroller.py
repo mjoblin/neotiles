@@ -2,12 +2,12 @@ import random
 import time
 
 from bitmapfont.bitmapfont import BitmapFont
-from neotiles import PixelColor, TileManager, Tile, TileSize
+from neotiles import MatrixSize, PixelColor, TileManager, Tile
 
 
 # Set these defaults to match your specific hardware.  You may also need to
 # set the TileManager's strip_type parameter.
-TILE_SIZE = TileSize(8, 8)
+MATRIX_SIZE = MatrixSize(8, 8)
 LED_PIN = 18
 
 
@@ -50,9 +50,6 @@ class TextScrollerTile(Tile):
         Initialize the tile's state when about to embark on scrolling a new
         text string.
         """
-        # Ensure we don't get more data until we're ready.
-        self.is_accepting_data = False
-
         # Set up the beginning state of the text scroll.
         self._bitmap_font = BitmapFont(*self.size, self._draw_text_pixel,
                                        font_name='bitmapfont/font5x8.bin')
@@ -100,6 +97,8 @@ class TextScrollerTile(Tile):
             return
 
         if self.is_accepting_data:
+            # Ensure we don't get more data until we're ready.
+            self.is_accepting_data = False
             self._init_new_scroll()
 
         # Clear the tile to prepare for the next frame of the scroll animation.
@@ -120,8 +119,8 @@ class TextScrollerTile(Tile):
             self.clear()
             self._bitmap_font.deinit()
             self._bitmap_font = None
-            self.data = None
             self.is_accepting_data = True
+            self.data = None
 
 
 class TextScrollProgressTile(Tile):
@@ -145,7 +144,7 @@ class TextScrollProgressTile(Tile):
 
 def main():
     # Initialize our matrix, animating at 10 frames per second.
-    tiles = TileManager(TILE_SIZE, LED_PIN, draw_fps=10)
+    tiles = TileManager(MATRIX_SIZE, LED_PIN, draw_fps=10)
 
     text_tile = TextScrollerTile(animate=True)
     progress_tile = TextScrollProgressTile(animate=True)
@@ -158,33 +157,38 @@ def main():
     # Kick off the matrix animation loop.
     tiles.draw_hardware_matrix()
 
+    #
+    lines = [
+        'If you think it long and mad',
+        'the wind of banners',
+        'that passes through my life',
+        'and you decide',
+        'to leave me at the shore',
+        'of the heart where I have roots',
+        'remember',
+        'that on that day',
+        'at that hour',
+        'I shall lift my arms',
+        'and my roots will set off',
+        'to seek another land',
+    ]
+
     try:
         while True:
             if text_tile.is_accepting_data:
                 # Send a new text string to the tile.  This will only succeed
-                # when the tile is ready to receive a new string (via its
-                # is_accepting_data attribute); but we keep trying every
-                # quarter second until we succeed.
+                # when the tile is ready to receive a new string (i.e. when its
+                # is_accepting_data attribute is True); so we keep trying every
+                # second until we're able to send a new string.
+                new_line = random.choice(lines)
+                print('Scrolling line: {}'.format(new_line))
 
                 text_tile.data = {
                     'progress_tile': progress_tile,
-                    'text': random.choice([
-                        'If you think it long and mad',
-                        'the wind of banners',
-                        'that passes through my life',
-                        'and you decide',
-                        'to leave me at the shore',
-                        'of the heart where I have roots',
-                        'remember',
-                        'that on that day',
-                        'at that hour',
-                        'I shall lift my arms',
-                        'and my roots will set off',
-                        'to seek another land',
-                     ])
+                    'text': new_line
                 }
 
-            time.sleep(0.25)
+            time.sleep(1)
     except KeyboardInterrupt:
         tiles.draw_stop()
         tiles.clear_hardware_matrix()

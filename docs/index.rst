@@ -68,9 +68,13 @@ To use neotiles all you need to do is:
 
 * Create a :class:`~TileManager` object, enabling animation (via the ``draw_fps`` parameter) if you wish.
 * Create your own subclasses of :class:`~Tile` and implement the :meth:`~Tile.draw` method, which sets the tile's pixel colors appropriately based on whatever data is currently available.
-* Register your Tile subclass instances with a TileManager instance.
+* Create tile objects from your Tile subclasses, and register them with your TileManager object.
 * Call :meth:`TileManager.draw_hardware_matrix` to draw all the tiles on the matrix.
-* Send data to the TileManager object with :meth:`TileManager.send_data_to_tiles` (or individually to each Tile object via the :attr:`Tile.data` attribute).  The data can be anything in any format, so long as your tiles know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop; or if you've disabled animation, then just call :meth:`TileManager.draw_hardware_matrix` whenever you're ready to update the matrix.
+
+And if you're sending data to your tiles then:
+
+* Send data to the TileManager object with :meth:`TileManager.send_data_to_tiles`, or individually to each Tile object via the :attr:`Tile.data` attribute.
+* The data can be anything in any format, so long as your tiles know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop; or if you've disabled animation then just call :meth:`TileManager.draw_hardware_matrix` whenever you're ready to update the matrix.
 
 A quick example
 ---------------
@@ -82,21 +86,21 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
     from neotiles import TileManager, Tile, PixelColor
 
     # Initialize an 8x8 matrix.
-    tiles = TileManager(size=(8, 8), led_pin=18)
+    tiles = TileManager(matrix_size=(8, 8), led_pin=18, draw_fps=None)
 
     # Create three tiles. Tiles are given their dimensions later.
-    red_tile = Tile(default_color=PixelColor(128, 0, 0))
-    grn_tile = Tile(default_color=PixelColor(0, 128, 0))
-    blu_tile = Tile(default_color=PixelColor(0, 0, 128))
+    red_tile = Tile(default_color=PixelColor(128, 0, 0), animate=False)
+    grn_tile = Tile(default_color=PixelColor(0, 128, 0), animate=False)
+    blu_tile = Tile(default_color=PixelColor(0, 0, 128), animate=False)
 
-    # Assign the 3 tiles to the matrix. This is when the tiles will
-    # be given their dimensions.
+    # Assign the 3 tiles to the matrix. This is when the tiles will be
+    # given their dimensions.
     tiles.register_tile(red_tile, size=(4, 4), root=(0, 0))
     tiles.register_tile(grn_tile, size=(4, 4), root=(4, 0))
     tiles.register_tile(blu_tile, size=(8, 4), root=(0, 4))
 
     # Display each tile's pixel colors on the neopixel matrix.
-    tiles.draw_matrix()
+    tiles.draw_hardware_matrix()
 
 This example relies on the default Tile class's ``default_color`` parameter to
 set its color.  Normally you'll write your own subclass of Tile which will set

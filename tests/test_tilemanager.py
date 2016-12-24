@@ -1,7 +1,7 @@
 import pytest
 
 from neotiles import (
-    PixelColor, Tile, TileManager, TilePosition, TileSize)
+    MatrixSize, PixelColor, Tile, TileManager, TilePosition)
 from neotiles.exceptions import NeoTilesError
 
 from .fixtures import default_tile, manager_10x5
@@ -12,23 +12,23 @@ class TestTileManager:
         """
         Test instantiations.
         """
-        # led_pin and size are required.
+        # led_pin and matrix_size are required.
         with pytest.raises(NeoTilesError) as e:
             TileManager()
-        assert 'size and led_pin must be specified' in str(e)
+        assert 'matrix_size and led_pin must be specified' in str(e)
 
         with pytest.raises(NeoTilesError) as e:
             TileManager(led_pin=18)
-        assert 'size and led_pin must be specified' in str(e)
+        assert 'matrix_size and led_pin must be specified' in str(e)
 
         with pytest.raises(NeoTilesError) as e:
-            TileManager(size=(8, 8))
-        assert 'size and led_pin must be specified' in str(e)
+            TileManager(matrix_size=(8, 8))
+        assert 'matrix_size and led_pin must be specified' in str(e)
 
         # Check default properties.
-        tm = TileManager(size=(10, 5), led_pin=18)
-        assert isinstance(tm.size, TileSize) is True
-        assert tm.size == (10, 5)
+        tm = TileManager(matrix_size=(10, 5), led_pin=18)
+        assert isinstance(tm.matrix_size, MatrixSize) is True
+        assert tm.matrix_size == (10, 5)
         assert tm.brightness == 64
         assert len(tm.tiles_meta) == 0
         assert len(tm.tiles) == 0
@@ -105,7 +105,7 @@ class TestTileManager:
         """
         Test setting the brightness attribute.
         """
-        tm = TileManager(size=(3, 2), led_pin=18)
+        tm = TileManager(matrix_size=(3, 2), led_pin=18)
         assert tm.brightness == 64
         tm.brightness = 100
         assert tm.brightness == 100
@@ -141,9 +141,9 @@ class TestTileManager:
         """
         Test the repr output.
         """
-        tm = TileManager(size=(3, 2), led_pin=18)
+        tm = TileManager(matrix_size=(3, 2), led_pin=18)
         assert repr(tm) == (
-            'TileManager(size=TileSize(cols=3, rows=2), led_pin=18, '
+            'TileManager(matrix_size=MatrixSize(cols=3, rows=2), led_pin=18, '
             'led_freq_hz=800000, led_dma=5, led_brightness=64, '
             'led_invert=False, strip_type=ws.WS2811_STRIP_GRB)'
         )
@@ -153,7 +153,7 @@ class TestTileManager:
         Test the stringified output.
         """
         # Test default (no tile).
-        tm = TileManager(size=(3, 2), led_pin=18)
+        tm = TileManager(matrix_size=(3, 2), led_pin=18)
         assert str(tm) == (
             '[ 0]   0,  0,  0,  0  [ 1]   0,  0,  0,  0  [ 2]   0,  0,  0,  0  \n'
             '[ 3]   0,  0,  0,  0  [ 4]   0,  0,  0,  0  [ 5]   0,  0,  0,  0'

@@ -165,9 +165,8 @@ class PixelColor(object):
     @property
     def components(self):
         """
-        ((float|int, ...)) The color as a tuple of RGB(W) component values.
-            Values will be normalized or denormalized to match
-            ``is_normalized``.
+        The color as a tuple of RGB(W) component values.  Values will either be
+        normalized or denormalized to match ``is_normalized``.
         """
         if self.is_rgb:
             return self.red, self.green, self.blue
@@ -177,8 +176,7 @@ class PixelColor(object):
     @property
     def components_normalized(self):
         """
-        ((float, ...)) The color as a tuple of normalized RGB(W) component
-            values.
+        The color as a tuple of normalized (0-1) RGB(W) component values.
         """
         if self.is_rgb:
             return (
@@ -197,8 +195,7 @@ class PixelColor(object):
     @property
     def components_denormalized(self):
         """
-        ((int, ...)) The color as a tuple of denormalized RGB(W) component
-            values.
+        The color as a tuple of denormalized (0-255) RGB(W) component values.
         """
         if self.is_rgb:
             return (
@@ -217,7 +214,7 @@ class PixelColor(object):
     @property
     def hardware_components(self):
         """
-        ((int, ...)) The color as a tuple suitable for passing to
+        The color as a tuple of integers suitable for passing to
         ``Adafruit_NeoPixel.setPixelColorRGB()`` for display on neopixel
         hardware.
         """
@@ -226,7 +223,7 @@ class PixelColor(object):
     @property
     def hardware_int(self):
         """
-        ((int, ...)) The color as an integer suitable for passing to
+        The color as an integer suitable for passing to
         ``Adafruit_NeoPixel.setPixelColor()`` for display on neopixel hardware.
         """
         if self.is_rgb:

@@ -1,5 +1,7 @@
 import random
 
+import wrapt
+
 from .pixelcolor import PixelColor
 from .tilemanager import PixelPosition, TileSize
 
@@ -15,6 +17,47 @@ class Tile(object):
     data-based pixel coloring.**  Subclasses will usually override the
     :meth:`draw` method to process the data last sent to the tile and then call
     the :meth:`set_pixel` method to set the color of each pixel in the tile.
+
+    Example usage: ::
+
+        from neotiles import PixelColor, Tile, TileManager
+
+        # Define our own MyRGBTile class.
+        class MyRGBTile(Tile):
+            def draw(self):
+                # Determine our display color based on the tile's data
+                # We expect the data to be one of 'red', 'green', 'blue'.
+                if self.data == 'red':
+                    display_color = PixelColor(255, 0, 0, 0)
+                elif self.data == 'green':
+                    display_color = PixelColor(0, 255, 0, 0)
+                elif self.data == 'blue':
+                    display_color = PixelColor(0, 0, 255, 0)
+                else:
+                    display_color = PixelColor(0, 0, 0, 0)
+
+                # Set every pixel in the tile to the display color.
+                for row in range(self.size.rows):
+                    for col in range(self.size.cols):
+                        self.set_pixel((col, row), display_color)
+
+        # Instantiate our MyRGBTile class and register it with a
+        # tile manager.
+        rgb_tile = MyRGBTile()
+
+        tiles = TileManager(matrix_size=(8, 8), led_pin=18)
+        tiles.register_tile(rgb_tile, size=(8, 8), root=(0, 0))
+
+        # Start the animation loop.
+        tiles.draw_hardware_matrix()
+
+        # Display some colors.
+        rgb_tile.data = 'red'
+        rgb_tile.data = 'green'
+        rgb_tile.data = 'blue'
+
+        # Stop the animation loop.
+        tiles.draw_stop()
 
     **Animating tiles:**
 
@@ -74,6 +117,7 @@ class Tile(object):
             self._default_color
         )
 
+    @wrapt.synchronized
     def _init_pixels(self, color=None):
         """
         Initialize all pixels in the tile to the given ``color``.
@@ -108,30 +152,10 @@ class Tile(object):
         **This method is usually overridden by subclasses and is called
         automatically by the TileManager object that the tile is registered
         with.**
-
-        For example: ::
-
-            class MyRGBTile(Tile):
-                def draw(self):
-                    # Determine our display color based on the tile's
-                    # data. We expect the data to be one of 'red',
-                    # 'green', or 'blue'.
-                    if self.data == 'red':
-                        display_color = PixelColor(255, 0, 0, 0)
-                    elif self.data == 'green':
-                        display_color = PixelColor(0, 255, 0, 0)
-                    elif self.data == 'blue':
-                        display_color = PixelColor(0, 0, 255, 0)
-                    else:
-                        display_color = PixelColor(0, 0, 0, 0)
-
-                    # Set every pixel in the tile to the display color.
-                    for row in range(self.size.rows):
-                        for col in range(self.size.cols):
-                            self.set_pixel((col, row), display_color)
         """
         self._init_pixels()
 
+    @wrapt.synchronized
     def set_pixel(self, pos, color):
         """
         Sets the pixel at the given ``pos`` in the tile to the given ``color``.
@@ -154,7 +178,8 @@ class Tile(object):
     @property
     def animate(self):
         """
-        Whether the tile is animating or not.
+        (bool) Get or set whether the tile will be included in the
+        TileManager's animation loop.
 
         Setting this attribute to True will result in the TileManager calling
         the tile's :meth:`draw` method for every frame it its animation loop.
@@ -162,6 +187,7 @@ class Tile(object):
         return self._animate
 
     @animate.setter
+    @wrapt.synchronized
     def animate(self, val):
         if val is not True and val is not False:
             raise ValueError('animate must be set to True or False')
@@ -171,31 +197,33 @@ class Tile(object):
     @property
     def data(self):
         """
-        Sends new data to the tile.
+        Get or set the data associated with the tile.
 
         This attribute can either be set manually, or will be set automatically
         via the :meth:`TileManager.send_data_to_tiles` method on the
         TileManager object the tile is registered with.
 
         The data assigned to the ``data`` attribute can be anything, so long as
-        the Tile object knows how to interpret it (which is usually done in the
+        the tile knows how to interpret it (which is usually done in the
         :meth:`draw` method).
+
+        Note that a this does not make a copy of the data.  This means that if
+        you assign (say) a list or a dictionary to the ``data`` attribute then
+        the tile is sharing that data with whatever initially created it.
         """
         return self._data
 
     @data.setter
+    @wrapt.synchronized
     def data(self, in_data):
-        if self.is_accepting_data:
+        if self._is_accepting_data:
             self._data = in_data
 
     @property
     def default_color(self):
         """
-        The default color for the tile.  This is usually ignored, assuming the
-        tile is painting its own pixel colors.
-
-        :getter: (:class:`~PixelColor`) Returns the default tile color.
-        :setter: (:class:`~PixelColor`) Sets the default tile color.
+        (:class:`~PixelColor`) Get or set the default color for the tile.  This
+        is usually ignored, assuming the tile is painting its own pixel colors.
         """
         return self._default_color
 
@@ -206,8 +234,7 @@ class Tile(object):
     @property
     def is_accepting_data(self):
         """
-        True if the tile is willing to accept new data on the :attr:`data`
-        attribute, otherwise False.
+        (bool) Get or set whether the tile is accepting data.
 
         You can set this attribute to False if you want your tile to ignore
         any attempts to update its data before it has finished any longer-term
@@ -216,6 +243,7 @@ class Tile(object):
         return self._is_accepting_data
 
     @is_accepting_data.setter
+    @wrapt.synchronized
     def is_accepting_data(self, val):
         if val is not True and val is not False:
             raise ValueError('is_accepting_data must be set to True or False')
@@ -225,27 +253,25 @@ class Tile(object):
     @property
     def pixels(self):
         """
-        A two-dimensional list which contains the color of each pixel in the
-        tile.
+        Get the tile's current pixel colors.
 
-        :getter: ([[:class:`~PixelColor`, ...], ...]) Returns a two-dimensional
-            list of tile pixel colors.
+        The colors are returned as a two-dimensional list (with the same
+        dimensions as :attr:`size`) of :class:`~PixelColor` objects.
         """
         return self._pixels
 
     @property
     def size(self):
         """
-        The size of the tile (in columns and rows).
+        (:class:`TileSize`) Get or set the size of the tile.
 
-        :getter: (:class:`~TileSize`) Returns the size of the tile.
-        :setter: (:class:`~TileSize`) Sets the size of the tile.  This will be
-            set automatically by the :class:`~TileManager` object the tile is
-            registered with.
+        This attribute will be set automatically by the TileManager object the
+        tile is registered with.
         """
         return self._size
 
     @size.setter
+    @wrapt.synchronized
     def size(self, value):
         self._size = TileSize(*value)
         self._init_pixels()

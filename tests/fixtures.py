@@ -10,5 +10,5 @@ def default_tile():
 
 @pytest.fixture
 def manager_10x5():
-    return TileManager(size=(10, 5), led_pin=18)
+    return TileManager(matrix_size=(10, 5), led_pin=18)
 

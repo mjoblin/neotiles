@@ -369,11 +369,11 @@ def linkcode_resolve(domain, info):
             'TileManager', 'TilePosition', 'TileSize', 'PixelPosition']:
         filename = 'tilemanager'
     elif info['fullname'] == 'Tile':
-        filename = 'tilehandler'
+        filename = 'tile'
     elif info['fullname'] == 'PixelColor':
         filename = 'pixelcolor'
     elif info['fullname'] == 'NeoTilesError':
-        filename = 'exceptions'
+        filename = 'exceptions/__init__'
     else:
         return None
 
