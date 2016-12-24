@@ -14,12 +14,14 @@ PixelPosition = namedtuple('PixelPosition', 'x y')
 
 # TODO: Change getter/setter docs.
 # TODO: Check other docs for completeness.
+
 # TODO: Test exceptions on setting getters.
 # TODO: Look into commandline options for pytest to pass in matrix size
 # TODO: Create test_hardware.py for actual hardware tests (import Adafruit too)
 # TODO: Check that tests are testing method arguments
-# TODO: Update the repo README
 # TODO: Boost test coverage
+
+# TODO: Update the repo README
 
 
 class StoppableThread(threading.Thread):
@@ -55,13 +57,13 @@ class TileManager(object):
     `neopixel <https://github.com/jgarff/rpi_ws281x/tree/master/python>`_
     module.
 
-    If your RGB values appear to be mixed up (for example, red is showing as
-    green) then try using a different ``strip_type``.  You can see a list of
-    valid strip type constants here (look for ``_STRIP_`` in the constant
-    name): https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html.  Specify a strip
-    type like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For this to work
-    you'll need to ``import ws`` (which comes with the ``neopixel`` module)
-    into your code.
+    If your RGB values appear to be mixed up (e.g. red is showing as green)
+    then try using a different ``strip_type``.  You can see a list of valid
+    strip type constants here (look for ``_STRIP_`` in the constant name):
+    https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html.  Specify a strip type
+    like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For this to work you'll
+    need to ``import ws`` (which comes with the ``neopixel`` module) into your
+    code.
 
     **Animation**:
 
@@ -74,8 +76,8 @@ class TileManager(object):
 
     The animation loop will attempt to re-draw the matrix at a rate of
     ``draw_fps`` times per second.  This rate may or may not be achieved
-    depending on what else the CPU is doing, including the compute load created
-    by the tiles' :meth:`Tile.draw` methods.
+    depending on whatever else the CPU is doing, including the compute load
+    created by the tiles' :meth:`Tile.draw` methods.
 
     The animation loop assumes that something else will be sending data to the
     tiles via the :attr:`Tile.data` attribute or the
@@ -86,7 +88,7 @@ class TileManager(object):
     :param size: (:class:`TileSize`) Size (in cols and rows) of the neopixel
         matrix.
     :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
-    :param draw_fps: (int) The frame rate for the drawing animation loop.
+    :param draw_fps: (int|None) The frame rate for the drawing animation loop.
     :param led_freq_hz: (int) LED frequency.
     :param led_dma: (int) LED DMA.
     :param led_brightness: (int) Brightness of the matrix display (0-255).
@@ -96,7 +98,7 @@ class TileManager(object):
         not specified.
     """
     def __init__(
-            self, size=None, led_pin=None, draw_fps=None, led_freq_hz=800000,
+            self, size=None, led_pin=None, draw_fps=10, led_freq_hz=800000,
             led_dma=5, led_brightness=64, led_invert=False,
             strip_type=ws.WS2811_STRIP_GRB):
 
@@ -367,15 +369,16 @@ class TileManager(object):
 
     def draw_hardware_matrix(self):
         """
-        Draws each registered tile's pixels to the hardware matrix.
-
-        Each tile's pixel colors are retrieved via the tile's :meth:`Tile.draw`
-        method before being drawn (in the correct position) on the actual
-        hardware matrix.
+        Calls each tile's :meth:`Tile.draw` method to ensure that each tile's
+        pixels are up to date, with the result being displayed on the hardware
+        matrix.
 
         If the TileManager's ``draw_fps`` attribute (set at instantiation) is
         not ``None`` then this method will also trigger the animation loop if
-        it's not already running.
+        it's not already running.  This means that you only need to call this
+        method once if you've enable animation, as the animation loop will
+        ensure that this method is automatically invoked once per animation
+        frame.
         """
         if self._draw_fps is None:
             self._set_pixels_from_tiles()

@@ -21,7 +21,7 @@ class Tile(object):
     If ``animate=True`` then the tile handler's :meth:`draw` method will be
     called for every frame by the :class:`~TileManager` that the tile is
     registered with.  Tiles will only animate if ``animate=True`` and if the
-    tile's TileManager has set its ``anim_fps``.
+    tile's TileManager has set its ``anim_fps`` to a non-None integer value.
 
     **Tile size:**
 
@@ -29,11 +29,11 @@ class Tile(object):
     (a :class:`TileSize` object).  This is useful when drawing the tile as
     the :meth:`draw` method needs to know the dimensions of the tile.
 
-    Tiles are assigned their :attr:`size` by the :class:`~TileManager` object
-    that they're registered with (see :meth:`TileManager.register_tile`).
-    Tiles are responsible for determining the color of each of their pixels,
-    usually based on incoming :attr:`data` which can be set manually or be
-    provided by the TileManager object they're registered with.
+    Tiles are assigned their :attr:`size` by the TileManager object that
+    they're registered with (see :meth:`TileManager.register_tile`).  Tiles are
+    responsible for determining the color of each of their pixels, usually
+    based on incoming :attr:`data` which can be set manually or be provided by
+    the TileManager object via :meth:`TileManager.send_data_to_tiles`.
 
     :param default_color: (:class:`PixelColor`) Default color for all pixels in
         the tile.
@@ -90,7 +90,7 @@ class Tile(object):
 
     def clear(self):
         """
-        Clears the tile by setting all tile's pixels to
+        Clears the tile by setting all the tile's pixels to
         ``PixelColor(0, 0, 0, 0)``.  This does not update the pixels on the
         hardware neopixel matrix.
         """
@@ -178,7 +178,7 @@ class Tile(object):
         TileManager object the tile is registered with.
 
         The data assigned to the ``data`` attribute can be anything, so long as
-        the Tile object knows how to interpret it (which it usually does in the
+        the Tile object knows how to interpret it (which is usually done in the
         :meth:`draw` method).
         """
         return self._data

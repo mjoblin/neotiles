@@ -16,7 +16,7 @@ Main classes:
 
 Supporting classes:
 
-* :class:`TilePosition` - The position of a tile inside the larger hardware neopixel matrix.
+* :class:`TilePosition` - The position of a tile inside the larger hardware neopixel matrix (x, y).
 * :class:`TileSize` - The size of a tile (cols, rows).
 * :class:`PixelPosition` - The position of a neopixel inside a tile (x, y).
 * :class:`exceptions.NeoTilesError` - Exception raised when neotiles encounters a problem.

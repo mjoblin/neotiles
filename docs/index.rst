@@ -66,11 +66,11 @@ How to use it
 
 To use neotiles all you need to do is:
 
-* Create a :class:`~TileManager` object, enabling animation if you wish.
+* Create a :class:`~TileManager` object, enabling animation (via the ``draw_fps`` parameter) if you wish.
 * Create your own subclasses of :class:`~Tile` and implement the :meth:`~Tile.draw` method, which sets the tile's pixel colors appropriately based on whatever data is currently available.
-* Register your Tile subclass instances with the TileManager object.
-* Call :meth:`TileManager.draw_matrix` to draw all the tiles on the matrix.
-* Send data to the TileManager object (or individually to each Tile object).  The data can be anything in any format, so long as your tiles know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop.
+* Register your Tile subclass instances with a TileManager instance.
+* Call :meth:`TileManager.draw_hardware_matrix` to draw all the tiles on the matrix.
+* Send data to the TileManager object with :meth:`TileManager.send_data_to_tiles` (or individually to each Tile object via the :attr:`Tile.data` attribute).  The data can be anything in any format, so long as your tiles know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop; or if you've disabled animation, then just call :meth:`TileManager.draw_hardware_matrix` whenever you're ready to update the matrix.
 
 A quick example
 ---------------
@@ -84,7 +84,7 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
     # Initialize an 8x8 matrix.
     tiles = TileManager(size=(8, 8), led_pin=18)
 
-    # Create three tile. Tiles are given their dimensions later.
+    # Create three tiles. Tiles are given their dimensions later.
     red_tile = Tile(default_color=PixelColor(128, 0, 0))
     grn_tile = Tile(default_color=PixelColor(0, 128, 0))
     blu_tile = Tile(default_color=PixelColor(0, 0, 128))
@@ -100,8 +100,8 @@ top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
 
 This example relies on the default Tile class's ``default_color`` parameter to
 set its color.  Normally you'll write your own subclass of Tile which will set
-the tile's pixels to more interesting colors (via your override of the draw()
-method).
+the tile's pixels to more interesting colors (via your override of the
+:meth:`Tile.draw` method).
 
 You can see more on the :doc:`/pages/examples` page.
 
