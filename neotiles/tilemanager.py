@@ -12,22 +12,13 @@ TilePosition = namedtuple('TilePosition', 'x y')
 TileSize = namedtuple('TileSize', 'cols rows')
 PixelPosition = namedtuple('PixelPosition', 'x y')
 
-# TODO: Consider moving animate() to animate=True on constructor
-# TODO: Quietly ignore pixels outside the matrix boundary?  (Might allow for
-#   animation of the tiles themselves).
 # TODO: Change getter/setter docs.
 # TODO: Check other docs for completeness.
-# TODO: Rename pixels attribute to pixel_colors?
 # TODO: Test exceptions on setting getters.
 # TODO: Look into commandline options for pytest to pass in matrix size
 # TODO: Create test_hardware.py for actual hardware tests (import Adafruit too)
 # TODO: Check that tests are testing method arguments
-# TODO: Add hardware_matrix attribute to docs
-# TODO: Move exceptions to exceptions.*
-# TODO: Change TileManager.data to be an attr to match Tile.data
-# TODO: Default Tile animate=True?
 # TODO: Update the repo README
-# TODO: Rename tiles to tiles_meta and tile_objects to tiles
 # TODO: Boost test coverage
 
 
