@@ -5,8 +5,8 @@ Examples
 
 To run the following examples you first need to
 `install neotiles <installation.html>`_.  Once that's done you can either
-copy/paste the example code from the github links below, or check out the
-neotiles repository from gitlab: ::
+copy/paste the example code from the github links below, or clone the neotiles
+repository from gitlab: ::
 
     git clone https://github.com/mjoblin/neotiles.git
 
