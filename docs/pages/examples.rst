@@ -8,7 +8,7 @@ To run the following examples you first need to
 copy/paste the example code from the github links below, or check out the
 neotiles repository from gitlab: ::
 
-    git checkout https://github.com/mjoblin/neotiles.git
+    git clone https://github.com/mjoblin/neotiles.git
 
 The examples are in the ``neotiles/examples`` directory.
 
