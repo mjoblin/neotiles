@@ -1,6 +1,12 @@
 # =============================================================================
 # Draws two tiles: the top one (using most of the matrix) displays scrolling
 # text.  The bottom one displays the progress of the scrolling text.
+#
+# This example relies on an external text drawing library:
+#    https://github.com/adafruit/micropython-adafruit-bitmap-font
+#
+# ... see installation instructions here:
+#    http://neotiles.readthedocs.io/pages/examples.html
 # =============================================================================
 
 from __future__ import division
