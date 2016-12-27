@@ -9,3 +9,7 @@ regions of a single neopixel matrix.
 
 Complete documentation is available on
 [Read the Docs](http://neotiles.readthedocs.io).
+
+Although you can `pip install neotiles` there's additional dependencies that
+you may need to install manually.  See the
+[installation instructions](http://neotiles.readthedocs.io/pages/installation.html).
