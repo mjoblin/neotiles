@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 packages = [package for package in find_packages()
             if package.startswith('neotiles')]
 
-version = '0.0.1'
+version = '0.1.0'
 
 install_requires = [
     'wrapt',

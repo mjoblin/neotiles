@@ -137,6 +137,14 @@ class TestTileManager:
             for matrix_pixel in row:
                 assert matrix_pixel == red_pixel
 
+    def test_unsettable_attributes(self, manager_10x5):
+        """
+        Try setting unsettable attributes.
+        """
+        for unsettable in ['matrix_size', 'tiles', 'tiles_meta', 'pixels']:
+            with pytest.raises(AttributeError):
+                setattr(manager_10x5, unsettable, 'foo')
+
     def test_repr(self):
         """
         Test the repr output.

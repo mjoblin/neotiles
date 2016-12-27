@@ -14,17 +14,6 @@ TileSize = namedtuple('TileSize', 'cols rows')
 TilePosition = namedtuple('TilePosition', 'x y')
 PixelPosition = namedtuple('PixelPosition', 'x y')
 
-# TODO: Change getter/setter docs.
-# TODO: Check other docs for completeness.
-
-# TODO: Test exceptions on setting getters.
-# TODO: Look into commandline options for pytest to pass in matrix size
-# TODO: Create test_hardware.py for actual hardware tests (import Adafruit too)
-# TODO: Check that tests are testing method arguments
-# TODO: Boost test coverage
-
-# TODO: Update the repo README
-
 
 class StoppableThread(threading.Thread):
     """
@@ -52,10 +41,10 @@ class TileManager(object):
     hardware matrix.
 
     You must specify a ``matrix_size`` matching your neopixel matrix (e.g.
-    ``(8, 8)``) as well as the ``led_pin`` that you're using to talk to it
-    (e.g. ``18``). The other parameters can usually be left at their defaults.
-    For more information on the other parameters look at the
-    ``Adafruit_NeoPixel`` class in the
+    ``(8, 8)``) as well as the ``led_pin`` you're using to talk to it (e.g.
+    ``18``). The other parameters can usually be left at their defaults.  For
+    more information on the other parameters look at the ``Adafruit_NeoPixel``
+    class in the
     `neopixel <https://github.com/jgarff/rpi_ws281x/tree/master/python>`_
     module.
 
@@ -307,7 +296,7 @@ class TileManager(object):
                 return
 
     def register_tile(
-            self, tile, size=None, root=None, draw_hardware_matrix=False):
+            self, tile, size=None, root=None):
         """
         Registers a tile with the TileManager.  Registering a tile allows
         its pixels to be drawn by the TileManager to the hardware matrix.
@@ -316,8 +305,6 @@ class TileManager(object):
         :param size: (:class:`TileSize`) Size of the tile (in cols and rows).
         :param root: (:class:`TilePosition`) Position of the top left corner
             of the tile within the hardware matrix.
-        :param draw_hardware_matrix: (bool) Whether to draw the matrix after
-            registering the tile.
         """
         tile.size = TileSize(*size)
 
@@ -331,10 +318,7 @@ class TileManager(object):
         # pixels.
         self._set_pixels_from_tiles()
 
-        if draw_hardware_matrix:
-            self.draw_hardware_matrix()
-
-    def deregister_tile(self, tile, draw_hardware_matrix=False):
+    def deregister_tile(self, tile):
         """
         Deregisters a tile from the tile manager.  Deregistered tiles will
         no longer be drawn to the hardware matrix.
@@ -344,8 +328,6 @@ class TileManager(object):
         automatically.
 
         :param tile: (:class:`Tile`) The tile being deregistered.
-        :param draw_hardware_matrix: (bool) Whether to draw the matrix after
-            deregistering the tile.
         :return: (int) The number of tiles removed.
         """
         removed = 0
@@ -357,9 +339,6 @@ class TileManager(object):
 
         if len(self._managed_tiles) == 0:
             self.draw_stop()
-
-        if draw_hardware_matrix:
-            self.draw_hardware_matrix()
 
         return removed
 
@@ -383,12 +362,12 @@ class TileManager(object):
         pixels are up to date, with the result being displayed on the hardware
         matrix.
 
-        If the TileManager's ``draw_fps`` attribute (set at instantiation) is
-        not ``None`` then this method will also trigger the animation loop if
-        it's not already running.  This means that you only need to call
-        ``draw_hardware_matrix`` once if you've enabled animation, as the
-        animation loop will ensure that the matrix is updated via each tile's
-        :meth:`Tile.draw` method once per animation frame.
+        If the TileManager's ``draw_fps`` is not ``None`` then this method will
+        also trigger the animation loop if it's not already running.  This
+        means that you only need to call ``draw_hardware_matrix`` once if
+        you've enabled animation, as the animation loop will ensure that the
+        matrix is updated via each tile's :meth:`Tile.draw` method once per
+        animation frame.
         """
         if self._draw_fps is None:
             self._set_pixels_from_tiles()

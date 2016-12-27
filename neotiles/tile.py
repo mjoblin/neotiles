@@ -18,9 +18,9 @@ class Tile(object):
     :meth:`draw` method to process the data last sent to the tile and then call
     the :meth:`set_pixel` method to set the color of each pixel in the tile.
 
-    Example usage: ::
+    Subclassing example, overriding the draw method: ::
 
-        from neotiles import PixelColor, Tile, TileManager
+        from neotiles import PixelColor, Tile
 
         # Define our own MyRGBTile class.
         class MyRGBTile(Tile):
@@ -41,30 +41,12 @@ class Tile(object):
                     for col in range(self.size.cols):
                         self.set_pixel((col, row), display_color)
 
-        # Instantiate our MyRGBTile class and register it with a
-        # tile manager.
-        rgb_tile = MyRGBTile()
-
-        tiles = TileManager(matrix_size=(8, 8), led_pin=18)
-        tiles.register_tile(rgb_tile, size=(8, 8), root=(0, 0))
-
-        # Start the animation loop.
-        tiles.draw_hardware_matrix()
-
-        # Display some colors.
-        rgb_tile.data = 'red'
-        rgb_tile.data = 'green'
-        rgb_tile.data = 'blue'
-
-        # Stop the animation loop.
-        tiles.draw_stop()
-
     **Animating tiles:**
 
-    If ``animate=True`` then the tile handler's :meth:`draw` method will be
-    called for every frame by the :class:`~TileManager` that the tile is
-    registered with.  Tiles will only animate if ``animate=True`` and if the
-    tile's TileManager has set its ``anim_fps`` to a non-None integer value.
+    If ``animate=True`` then the tile's :meth:`draw` method will be called for
+    every frame by the :class:`~TileManager` that the tile is registered with.
+    Tiles will only animate if ``animate=True`` and if the tile's TileManager
+    has set its ``anim_fps`` to a non-None integer value.
 
     **Tile size:**
 
@@ -152,6 +134,16 @@ class Tile(object):
         **This method is usually overridden by subclasses and is called
         automatically by the TileManager object that the tile is registered
         with.**
+
+        It's usually a good idea to break out of the draw method if the tile's
+        data is ``None`` as that usually means there's no data to process yet
+        (unless data of ``None`` means something in your case): ::
+
+            def draw(self):
+                if self.data is None:
+                    return
+
+                # Draw something...
         """
         self._init_pixels()
 
@@ -200,8 +192,8 @@ class Tile(object):
         Get or set the data associated with the tile.
 
         This attribute can either be set manually, or will be set automatically
-        via the :meth:`TileManager.send_data_to_tiles` method on the
-        TileManager object the tile is registered with.
+        via :meth:`TileManager.send_data_to_tiles` on the TileManager object
+        the tile is registered with.
 
         The data assigned to the ``data`` attribute can be anything, so long as
         the tile knows how to interpret it (which is usually done in the

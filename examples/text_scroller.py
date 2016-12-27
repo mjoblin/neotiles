@@ -1,14 +1,21 @@
+# =============================================================================
+# Draws two tiles: the top one (using most of the matrix) displays scrolling
+# text.  The bottom one displays the progress of the scrolling text.
+# =============================================================================
+
+from __future__ import division
 import random
 import time
 
 from bitmapfont.bitmapfont import BitmapFont
+from neopixel import ws
 from neotiles import MatrixSize, PixelColor, TileManager, Tile
 
 
-# Set these defaults to match your specific hardware.  You may also need to
-# set the TileManager's strip_type parameter.
+# Set these defaults to match your specific hardware.
 MATRIX_SIZE = MatrixSize(8, 8)
 LED_PIN = 18
+STRIP_TYPE = ws.WS2811_STRIP_GRB
 
 
 class TextScrollerTile(Tile):
@@ -51,7 +58,7 @@ class TextScrollerTile(Tile):
         text string.
         """
         # Set up the beginning state of the text scroll.
-        self._bitmap_font = BitmapFont(*self.size, self._draw_text_pixel,
+        self._bitmap_font = BitmapFont(*self.size, pixel=self._draw_text_pixel,
                                        font_name='bitmapfont/font5x8.bin')
         self._bitmap_font.init()
         self._pos = self.size.cols
@@ -134,7 +141,7 @@ class TextScrollProgressTile(Tile):
             return
 
         self.clear()
-        progress_pixels = round(self.size.cols * self.data)
+        progress_pixels = int(round(self.size.cols * self.data))
         for row in range(self.size.rows):
             for col in range(progress_pixels):
                 self.set_pixel((col, row), PixelColor(128, 0, 0))
@@ -144,10 +151,11 @@ class TextScrollProgressTile(Tile):
 
 def main():
     # Initialize our matrix, animating at 10 frames per second.
-    tiles = TileManager(MATRIX_SIZE, LED_PIN, draw_fps=10)
+    tiles = TileManager(
+        MATRIX_SIZE, LED_PIN, draw_fps=10, strip_type=STRIP_TYPE)
 
-    text_tile = TextScrollerTile(animate=True)
-    progress_tile = TextScrollProgressTile(animate=True)
+    text_tile = TextScrollerTile()
+    progress_tile = TextScrollProgressTile()
 
     # NOTE: This assumes an 8x8 matrix.  Tweak these values for a different-
     # sized matrix.

@@ -29,17 +29,33 @@ class TestTile:
 
     def test_default_color(self):
         """
-        Test that we can set the default color.
+        Test that we can get and set the default color.
         """
         color = PixelColor(0, 0.5, 1)
         tile = Tile(default_color=color)
         assert tile.default_color is color
+
+        # When instantiating with a color, check that the pixels were set.
         assert tile.pixels[0][0] is color
 
         pixel = tile.pixels[0][0]
         assert pixel.red == 0
         assert pixel.green == 0.5
         assert pixel.blue == 1
+        assert pixel.white is None
+
+        # Try a new color by setting the default_color attribute.
+        color = PixelColor(0.1, 0.2, 0.3)
+        tile.default_color = color
+        assert tile.default_color.components == (0.1, 0.2, 0.3)
+
+        # Draw the tile and make sure the pixels were set.
+        tile.draw()
+
+        pixel = tile.pixels[0][0]
+        assert pixel.red == 0.1
+        assert pixel.green == 0.2
+        assert pixel.blue == 0.3
         assert pixel.white is None
 
     def test_size(self, default_tile):
@@ -78,6 +94,9 @@ class TestTile:
                 else:
                     assert pixel_color == main_color
 
+        # Check that an out of bounds index moves along silently.
+        default_tile.set_pixel((999, -999), PixelColor(0, 0, 0, 0))
+
     def test_clear(self, default_tile):
         """
         Test clearing a tile (setting all pixels to (0, 0, 0).
@@ -111,6 +130,49 @@ class TestTile:
             default_tile.data = some_data
             assert default_tile._data is some_data
 
+    def test_data_get(self, default_tile):
+        """
+        Test getting the data attribute.
+        """
+        assert default_tile._data is None
+
+        default_tile.data = 'foo'
+        assert default_tile.data == 'foo'
+
+    def test_animate(self, default_tile):
+        """
+        Test the animate attribute.
+        """
+        assert default_tile.animate is True
+
+        default_tile.animate = False
+        assert default_tile.animate is False
+
+        with pytest.raises(ValueError) as e:
+            default_tile.animate = 'foo'
+        assert 'must be set to True or False' in str(e)
+
+    def test_is_accepting_data(self, default_tile):
+        """
+        Test the animate attribute.
+        """
+        assert default_tile.is_accepting_data is True
+
+        default_tile.is_accepting_data = False
+        assert default_tile.is_accepting_data is False
+
+        with pytest.raises(ValueError) as e:
+            default_tile.is_accepting_data = 'foo'
+        assert 'must be set to True or False' in str(e)
+
+    def test_unsettable_attributes(self, default_tile):
+        """
+        Try setting unsettable attributes.
+        """
+        for unsettable in ['pixels']:
+            with pytest.raises(AttributeError):
+                setattr(default_tile, unsettable, 'foo')
+
     def test_repr(self):
         """
         Test the repr output.
@@ -120,3 +182,13 @@ class TestTile:
             'Tile(default_color=PixelColor(red=100, green=200, blue=50, '
             'white=10, normalized=False))'
         )
+
+    def test_subclass_default_color(self):
+        """
+        Tile subclasses should get a blank default color.
+        """
+        class TileSubclass(Tile):
+            pass
+
+        tile = TileSubclass()
+        assert tile.default_color.components == (0, 0, 0, 0)

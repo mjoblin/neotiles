@@ -95,6 +95,10 @@ library installed): ::
 
    pytest
 
+To include the hardware integration tests: ::
+
+   pytest --hardware-led-pin <pin> --hardware-cols <cols> --hardware-rows <rows>
+
 Check PEP8 linting: ::
 
    flake8

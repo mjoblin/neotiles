@@ -1,3 +1,6 @@
+from __future__ import division
+
+
 class PixelColor(object):
     """
     Represents a single neopixel color (either RGB or RGBW).
@@ -144,7 +147,7 @@ class PixelColor(object):
     @property
     def is_normalized(self):
         """
-        (bool) Whether the color is normalized or not.
+        (bool) Whether the color is normalized.
         """
         return self._normalized
 
@@ -176,7 +179,7 @@ class PixelColor(object):
     @property
     def components_normalized(self):
         """
-        The color as a tuple of normalized (0-1) RGB(W) component values.
+        The color as a tuple of normalized RGB(W) component values.
         """
         if self.is_rgb:
             return (
@@ -195,7 +198,7 @@ class PixelColor(object):
     @property
     def components_denormalized(self):
         """
-        The color as a tuple of denormalized (0-255) RGB(W) component values.
+        The color as a tuple of denormalized RGB(W) component values.
         """
         if self.is_rgb:
             return (

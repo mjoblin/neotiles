@@ -74,7 +74,7 @@ To use neotiles all you need to do is:
 And if you're sending data to your tiles then:
 
 * Send data to the TileManager object with :meth:`TileManager.send_data_to_tiles`, or individually to each Tile object via the :attr:`Tile.data` attribute.
-* The data can be anything in any format, so long as your tiles know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop; or if you've disabled animation then just call :meth:`TileManager.draw_hardware_matrix` whenever you're ready to update the matrix.
+* The data can be anything in any format, so long as your tiles know how to interpret it and update their pixel colors appropriately.  Each tile's new colors will be automatically displayed on the matrix by the animation loop; or if you've disabled animation then just call your tile manager's :meth:`~TileManager.draw_hardware_matrix` method whenever you're ready to update the matrix.
 
 A quick example
 ---------------

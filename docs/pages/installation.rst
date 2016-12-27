@@ -14,9 +14,10 @@ There's a couple of quirks to contend with though:
 With that in mind you can choose to install everything into either a
 `virtualenv`_ or into the main system Python.
 
-(These instructions have been pulled from the `Adafruit site`_.)
+(These instructions have been pulled in part from the
+`Adafruit learning site`_.)
 
-Regardless of which approach you choose, you need to install some system
+Regardless of which approach you choose, you first need to install some system
 dependencies on your Raspberry Pi first: ::
 
     sudo apt-get update
@@ -39,6 +40,9 @@ Here's the steps: ::
     # Become root.
     sudo su -
 
+    # Install virtualenv if it's not already installed.
+    pip install virtualenv
+
     # Create a virtualenv to install the neopixel library. This forces
     # Python 3.4.  Remove '--python=python3.4' to use default Python
     # (usually Python 2.7).
@@ -54,7 +58,7 @@ Here's the steps: ::
 
     # Install the neopixel library.
     cd python
-    sudo python ./setup.py install
+    python ./setup.py install
 
     # Install neotiles.
     pip install neotiles
@@ -75,8 +79,7 @@ doing): ::
     scons
     cd python
     sudo python setup.py install
-
-    pip install neotiles
+    sudo pip install neotiles
 
 
 Another step: disabling audio
@@ -99,26 +102,27 @@ You also need to have your neopixel matrix `wired up`_ and ready to go.
 Testing the install
 -------------------
 
-To test that everything is working you can run an example script from the git
-repository: ::
+To test that everything is working you can run an example script (e.g.
+``speckled_tiles.py``) from the git repository.  Note that ``text_scroller.py``
+won't work without an additional install -- see the
+`examples page <examples.html>`_ for more. ::
 
     git clone https://github.com/mjoblin/neotiles.git
     cd neotiles/examples
 
-You'll need to edit the script to set ``MATRIX_SIZE``, ``LED_PIN``, and
-``STRIP_TYPE`` appropriately for your hardware, and then run it: ::
+You'll need to edit the script to set ``MATRIX_SIZE``, ``LED_PIN``,
+and ``STRIP_TYPE`` appropriately for your hardware, and then run it: ::
 
-    # In a virtualenv
-    python ./script.py
+    # In a virtualenv (as root)
+    python ./speckled_tiles.py
 
     # Not in a virtualenv
-    sudo python ./script.py
+    sudo python ./speckled_tiles.py
 
 If your neopixel matrix is showing colors but they look a bit messed up, try
-changing the ``STRIP_TYPE`` (or the ``strip_type`` parameter in the TileManager
-constructor -- they're the same thing) to match your matrix type.
+changing the ``STRIP_TYPE``.
 
-.. _Adafruit site: https://learn.adafruit.com/neopixels-on-raspberry-pi/software
+.. _Adafruit learning site: https://learn.adafruit.com/neopixels-on-raspberry-pi/software
 .. _rpi_ws281x: https://github.com/jgarff/rpi_ws281x
 .. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _rpi_ws281x issues page: https://github.com/jgarff/rpi_ws281x/issues/103
