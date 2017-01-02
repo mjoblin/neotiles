@@ -137,6 +137,35 @@ class TestTileManager:
             for matrix_pixel in row:
                 assert matrix_pixel == red_pixel
 
+    def test_tile_visibility(self, manager_10x5):
+        """
+        Test that an invisible tile does not have its pixels drawn to the
+        virtual matrix.
+        """
+        red_pixel = PixelColor(128, 0, 0, 0)
+        red_tile = Tile(default_color=red_pixel)
+        red_tile.visible = False
+
+        manager_10x5.register_tile(
+            tile=red_tile, size=(10, 5), root=(0, 0))
+
+        manager_10x5._set_pixels_from_tiles()
+        pixels = manager_10x5.pixels
+        for row in pixels:
+            for matrix_pixel in row:
+                # Default pixel color is 0, 0, 0, 0
+                assert (matrix_pixel.red == matrix_pixel.green ==
+                        matrix_pixel.blue == matrix_pixel.white == 0)
+
+        # With tile visibility enabled, the red pixels should get drawn to the
+        # virtual matrix.
+        red_tile.visible = True
+        manager_10x5._set_pixels_from_tiles()
+        pixels = manager_10x5.pixels
+        for row in pixels:
+            for matrix_pixel in row:
+                assert matrix_pixel == red_pixel
+
     def test_unsettable_attributes(self, manager_10x5):
         """
         Try setting unsettable attributes.

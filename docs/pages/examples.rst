@@ -116,9 +116,29 @@ This example shows how to:
 * Draw a tile to the matrix using the default Tile class (i.e. not subclassing).
 * Change a tile attribute (:attr:`Tile.size`) and see it update on the matrix.
 
+Fire
+----
+
+Draws two fire simulations on the matrix, side by side.  One tile displays a
+red fire based at the bottom of the matrix and the other tile displays a
+green fire based at the top of the matrix.
+
+This example is mostly copy-pasted from `this gist`_ which is described in
+`this video`_.
+
+`Fire source`_.
+
+This example shows how to:
+
+* Use the :meth:`Tile.on_size_set` handler.
+* Animate tiles without sending them any data.
+
 
 .. _Speckled tiles source: https://github.com/mjoblin/neotiles/blob/master/examples/speckled_tiles.py
 .. _Clock blocks source: https://github.com/mjoblin/neotiles/blob/master/examples/clock_blocks.py
 .. _Text scroller source: https://github.com/mjoblin/neotiles/blob/master/examples/text_scroller.py
 .. _Growing tile source: https://github.com/mjoblin/neotiles/blob/master/examples/growing_tile.py
+.. _Fire source: https://github.com/mjoblin/neotiles/blob/master/examples/fire.py
+.. _this gist: https://gist.github.com/tdicola/63768def5b2e4e3a942b085cd2264d7b
+.. _this video: https://www.youtube.com/watch?v=OJlYxnBLBbk
 .. _micropython-adafruit-bitmap-font: https://github.com/adafruit/micropython-adafruit-bitmap-font

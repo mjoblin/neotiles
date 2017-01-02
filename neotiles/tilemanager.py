@@ -217,6 +217,8 @@ class TileManager(object):
         # tiles happen to overlap then the last one processed will win.
         for managed_tile in self._managed_tiles:
             tile_object = managed_tile['tile_object']
+            if not tile_object.visible:
+                continue
 
             # Call the draw() method of any tile which is flagged as animating.
             if tile_object.animate:

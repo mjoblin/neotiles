@@ -165,6 +165,38 @@ class TestTile:
             default_tile.is_accepting_data = 'foo'
         assert 'must be set to True or False' in str(e)
 
+    def test_visibility(self, default_tile):
+        """
+        Test the visible attribute.
+        """
+        assert default_tile.visible is True
+
+        default_tile.visible = False
+        assert default_tile.visible is False
+
+        with pytest.raises(ValueError) as e:
+            default_tile.visible = 'foo'
+        assert 'must be set to True or False' in str(e)
+
+    def test_on_size_set(self):
+        """
+        Test the on_size_set handler.  This handler should be called whenever
+        the tile size is set.
+        """
+        class TestOnSizeSetTile(Tile):
+            def __init__(self):
+                super(TestOnSizeSetTile, self).__init__()
+                self.some_state = False
+
+            def on_size_set(self):
+                self.some_state = True
+
+        test_tile = TestOnSizeSetTile()
+        assert test_tile.some_state is False
+
+        test_tile.size = TileSize(8, 8)
+        assert test_tile.some_state is True
+
     def test_unsettable_attributes(self, default_tile):
         """
         Try setting unsettable attributes.

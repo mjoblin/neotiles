@@ -22,6 +22,8 @@ Supporting classes:
 * :class:`PixelPosition` - The position of a neopixel inside a tile (x, y).
 * :class:`exceptions.NeoTilesError` - Exception raised when neotiles encounters a problem.
 
+The :doc:`/pages/examples` page shows how to use these classes.
+
 Main classes
 ------------
 

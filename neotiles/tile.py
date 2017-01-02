@@ -10,6 +10,11 @@ class Tile(object):
     """
     Handles the data processing and pixel coloring for a single tile.
 
+    :param default_color: (:class:`PixelColor`) Default color for all pixels in
+        the tile.
+    :param animate: (bool) Whether the tile is animating and should be included
+        in the TileManager's animation loop.
+
     This class by default displays a random RGBW color inside the tile and
     ignores any incoming data on the :attr:`data` attribute.
 
@@ -17,6 +22,7 @@ class Tile(object):
     data-based pixel coloring.**  Subclasses will usually override the
     :meth:`draw` method to process the data last sent to the tile and then call
     the :meth:`set_pixel` method to set the color of each pixel in the tile.
+    Tiles are primarily responsible for setting their own pixel colors.
 
     Subclassing example, overriding the draw method: ::
 
@@ -50,18 +56,19 @@ class Tile(object):
 
     **Tile size:**
 
+    Tiles are instantiated with a default size of (1, 1).  Tiles are then
+    given their :attr:`size` when registered with a TileManager (via
+    :meth:`TileManager.register_tile`).
+
+    This means that when subclassing from Tile, the subclass will not know its
+    size in the ``__init__`` method.  When initial tile state needs to be
+    aware of its size then implement the :meth:`on_size_set` method.
+
     Subclasses can access their tile size via the :attr:`size` attribute
     (a :class:`TileSize` object).  This is useful when drawing the tile as
-    the :meth:`draw` method needs to know the dimensions of the tile.
-
-    Tiles are assigned their :attr:`size` by the TileManager object that
-    they're registered with (see :meth:`TileManager.register_tile`).  Tiles are
-    responsible for determining the color of each of their pixels, usually
-    based on incoming :attr:`data` which can be set manually or be provided by
-    the TileManager object via :meth:`TileManager.send_data_to_tiles`.
-
-    :param default_color: (:class:`PixelColor`) Default color for all pixels in
-        the tile.
+    the :meth:`draw` method needs to know the dimensions of the tile.  The
+    :attr:`size` attribute is also how the tile can access its size when
+    implementing :meth:`on_size_set`.
     """
     def __init__(self, default_color=None, animate=True):
         # Set the default color to something random if we're not a subclass
@@ -89,6 +96,7 @@ class Tile(object):
         self._size = None
         self._data = None
         self._pixels = None
+        self._visible = True
 
         self.animate = animate
         self.size = TileSize(1, 1)
@@ -146,6 +154,16 @@ class Tile(object):
                 # Draw something...
         """
         self._init_pixels()
+
+    def on_size_set(self):
+        """
+        Called when :attr:`size` is set.
+
+        **This method is usually overridden (when necessary) by subclasses and
+        is called automatically whenever the** :attr:`size` **attribute is
+        set.**
+        """
+        pass
 
     @wrapt.synchronized
     def set_pixel(self, pos, color):
@@ -267,3 +285,27 @@ class Tile(object):
     def size(self, value):
         self._size = TileSize(*value)
         self._init_pixels()
+        self.on_size_set()
+
+    @property
+    def visible(self):
+        """
+        (bool) Get or set whether the tile is visible.
+
+        Visible tiles will be displayed on the neopixel matrix by the
+        TileManager.
+
+        If ``visible`` is set to ``False`` then the tile will not be displayed
+        on the neopixel matrix by the TileManaer, but the tile's :meth:`draw`
+        method will still be called.  This allows for tile state (often
+        maintained in the draw method) to be updated even if the tile is
+        temporarily invisible.
+        """
+        return self._visible
+
+    @visible.setter
+    def visible(self, val):
+        if val is not True and val is not False:
+            raise ValueError('visible must be set to True or False')
+
+        self._visible = val
