@@ -11,11 +11,12 @@
 neotiles
 ========
 
-neotiles is a Python library which allows you to split a `neopixel matrix`_
-into independent animated tiles for rendering based on arbitrary input data.
-Each tile can display something different: a block of color, an animation,
-scrolling text, whatever you like; and all the tiles can be displayed in
-different regions of a single neopixel matrix.
+neotiles is a Python library which allows you to split either a
+`neopixel matrix`_ or an `RGB matrix`_ into independent animated tiles for
+rendering based on arbitrary input data.  Each tile can display something
+different: a block of color, an animation, scrolling text, or whatever else you
+can implement; and all the tiles can be displayed in different regions of a
+single matrix.
 
 A neopixel matrix contains a grid of RGB(W) LED pixels.  Here's what one looks
 like (images from `Adafruit`_):
@@ -26,14 +27,19 @@ like (images from `Adafruit`_):
 .. image:: _static/adafruit_8x8_color.jpg
    :width: 45 %
 
-neotiles has been tested on a Raspberry Pi 3 with the above 8x8 neopixel RGB
-matrix and Python 3.4 and 2.7.  It has not been tested on Micropython.
+An RGB matrix looks like this:
+
+.. image:: _static/adafruit_64x32_rgb.jpg
+   :width: 45 %
+
+neotiles has been tested on a Raspberry Pi 3 with the above matrixes and
+Python 3.4 and 2.7.  It has not been tested on Micropython.
 
 What neotiles does
 ------------------
 
-Normally you control all the pixels in a neopixel matrix via their unique pixel
-number, like this matrix which contains pixels 0 through 63:
+Normally you control all the pixels in a matrix via their unique pixel number,
+like this matrix which contains pixels 0 through 63:
 
 .. image:: _static/neotiles_matrix.svg
    :width: 300
@@ -66,7 +72,7 @@ How to use it
 
 To use neotiles all you need to do is:
 
-* Create a :class:`~TileManager` object, enabling animation (via the ``draw_fps`` parameter) if you wish.
+* Create a :class:`~TileManager` object, giving it information on your hardware matrix and optionally enabling animation (via the ``draw_fps`` parameter).
 * Create your own subclasses of :class:`~Tile` and implement the :meth:`~Tile.draw` method, which sets the tile's pixel colors appropriately based on whatever data is currently available.
 * Create tile objects from your Tile subclasses, and register them with your TileManager object.
 * Call :meth:`TileManager.draw_hardware_matrix` to draw all the tiles on the matrix.
@@ -84,9 +90,11 @@ or animation) three tiles inside of it: a top-left 4x4 tile (in red), a
 top-right 4x4 tile (in green), and an 8x4 bottom tile (in blue): ::
 
     from neotiles import TileManager, Tile, PixelColor
+    from neotiles.matrixes import NTNeoPixelMatrix
 
-    # Initialize an 8x8 matrix.
-    tiles = TileManager(matrix_size=(8, 8), led_pin=18, draw_fps=None)
+    # Initialize an 8x8 neopixel matrix.
+    tiles = TileManager(
+       NTNeoPixelMatrix(size=(8, 8), led_pin=18), draw_fps=None)
 
     # Create three tiles. Tiles are given their dimensions later.
     red_tile = Tile(default_color=PixelColor(128, 0, 0), animate=False)
@@ -110,4 +118,5 @@ the tile's pixels to more interesting colors (via your override of the
 You can see more on the :doc:`/pages/examples` page.
 
 .. _neopixel matrix: https://www.adafruit.com/?q=neopixel%20matrix
+.. _RGB matrix: https://www.adafruit.com/?q=rgb%20matrix
 .. _Adafruit: https://www.adafruit.com

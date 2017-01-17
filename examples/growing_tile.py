@@ -8,12 +8,18 @@ import time
 
 from neopixel import ws
 from neotiles import MatrixSize, TileManager, PixelColor, Tile, TileSize
+from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
 # Set these defaults to match your specific hardware.
 MATRIX_SIZE = MatrixSize(8, 8)
+
+# For NeoPixel matrix.
 LED_PIN = 18
 STRIP_TYPE = ws.WS2811_STRIP_GRB
+
+# For RGB matrix.
+CHAIN = 2
 
 
 # -----------------------------------------------------------------------------
@@ -21,7 +27,13 @@ STRIP_TYPE = ws.WS2811_STRIP_GRB
 def main():
     # Initialize our matrix, animating at 10 frames per second.
     tiles = TileManager(
-        MATRIX_SIZE, LED_PIN, draw_fps=10, strip_type=STRIP_TYPE)
+        NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
+        draw_fps=10
+    )
+    #tiles = TileManager(
+    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
+    #    draw_fps=10
+    #)
 
     # Use the default Tile class, setting its color to red.  We don't need to
     # override the draw method for this example as the default block drawing
@@ -44,7 +56,9 @@ def main():
 
             # Switch between growing bigger and smaller when we reach the
             # boundaries of the matrix.
-            if getting_bigger and size.cols >= MATRIX_SIZE.cols:
+            if getting_bigger and (
+                    size.cols >= MATRIX_SIZE.cols or
+                    size.rows >= MATRIX_SIZE.rows):
                 getting_bigger = False
             elif not getting_bigger and size.cols <= 1:
                 getting_bigger = True

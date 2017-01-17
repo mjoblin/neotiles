@@ -10,7 +10,33 @@ repository from gitlab: ::
 
     git clone https://github.com/mjoblin/neotiles.git
 
-The examples are in the ``neotiles/examples`` directory.
+The examples are in the ``neotiles/examples`` directory.  You'll need to edit
+them slightly to ensure they'll work with your particular matrix.  Look for
+these lines: ::
+
+   # Set these defaults to match your specific hardware.
+   MATRIX_SIZE = MatrixSize(64, 32)
+
+   # For NeoPixel matrix.
+   LED_PIN = 18
+   STRIP_TYPE = ws.WS2811_STRIP_GRB
+
+   # For RGB matrix.
+   CHAIN = 2
+
+And then enable either the ``NTNeoPixelMatrix``: ::
+
+    tiles = TileManager(
+        NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
+        draw_fps=10
+    )
+
+Or the ``NTRGBMatrix``: ::
+
+    tiles = TileManager(
+        NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
+        draw_fps=10
+    )
 
 All the examples are animated which photos aren't great at showing.
 Imagination.

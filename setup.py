@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 packages = [package for package in find_packages()
             if package.startswith('neotiles')]
 
-version = '0.2.0'
+version = '0.3.0'
 
 install_requires = [
     'wrapt',
@@ -32,7 +32,7 @@ extras_require = {
 setup(
     name='neotiles',
     version=version,
-    description='Treat a neopixel matrix as a collection of separate tiles',
+    description='Treat a neopixel or RGB matrix as a collection of separate tiles',
     author='Mike Joblin',
     author_email='mike@tastymoss.com',
     url='https://github.com/mjoblin/neotiles',

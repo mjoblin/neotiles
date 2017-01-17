@@ -13,14 +13,19 @@ import datetime
 import time
 
 from neopixel import ws
-from neotiles import (
-    MatrixSize, TileManager, PixelColor, Tile, TilePosition)
+from neotiles import MatrixSize, TileManager, PixelColor, Tile, TilePosition
+from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
 # Set these defaults to match your specific hardware.
 MATRIX_SIZE = MatrixSize(8, 8)
+
+# For NeoPixel matrix.
 LED_PIN = 18
 STRIP_TYPE = ws.WS2811_STRIP_GRB
+
+# For RGB matrix.
+CHAIN = 2
 
 
 class TimeTile(Tile):
@@ -76,7 +81,13 @@ class TimeTile(Tile):
 def main():
     # Initialize our matrix, animating at 10 frames per second.
     tiles = TileManager(
-        MATRIX_SIZE, LED_PIN, draw_fps=10, strip_type=STRIP_TYPE)
+        NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
+        draw_fps=10
+    )
+    #tiles = TileManager(
+    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
+    #    draw_fps=10
+    #)
 
     # Create three tiles based on our SpeckledTile class.  Tiles are told their
     # dimensions later.  We enable animation on the first tile only.
@@ -85,15 +96,15 @@ def main():
     min_tile = TimeTile(color=PixelColor(0, 0, 1, 0), time_component='minute')
     sec_tile = TimeTile(color=PixelColor(1, 1, 1, 0), time_component='second')
 
-    # Assign the tiles to the tile manager.  This is when the tiles will be
-    # given their dimensions.
+    cols = MATRIX_SIZE.cols
+    rows = MATRIX_SIZE.rows
+    width = cols // 4
 
-    # NOTE: This assumes an 8x8 matrix.  Tweak these values for a different-
-    # sized matrix.
-    tiles.register_tile(day_tile, size=(2, 8), root=(0, 0))
-    tiles.register_tile(hrs_tile, size=(2, 8), root=(2, 0))
-    tiles.register_tile(min_tile, size=(2, 8), root=(4, 0))
-    tiles.register_tile(sec_tile, size=(2, 8), root=(6, 0))
+    # Assign the tiles to the tile manager.
+    tiles.register_tile(day_tile, size=(width, rows), root=(0, 0))
+    tiles.register_tile(hrs_tile, size=(width, rows), root=(int(cols*0.25), 0))
+    tiles.register_tile(min_tile, size=(width, rows), root=(int(cols*0.5), 0))
+    tiles.register_tile(sec_tile, size=(width, rows), root=(int(cols*0.75), 0))
 
     # Kick off the matrix animation loop.
     tiles.draw_hardware_matrix()

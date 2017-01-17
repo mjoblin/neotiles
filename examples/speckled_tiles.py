@@ -10,14 +10,19 @@ import random
 import time
 
 from neopixel import ws
-from neotiles import (
-    MatrixSize, TileManager, PixelColor, Tile, TilePosition)
+from neotiles import MatrixSize, TileManager, PixelColor, Tile, TilePosition
+from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
 # Set these defaults to match your specific hardware.
 MATRIX_SIZE = MatrixSize(8, 8)
+
+# For NeoPixel matrix.
 LED_PIN = 18
 STRIP_TYPE = ws.WS2811_STRIP_GRB
+
+# For RGB matrix.
+CHAIN = 2
 
 
 class SpeckledTile(Tile):
@@ -49,7 +54,13 @@ class SpeckledTile(Tile):
 def main():
     # Initialize our matrix, animating at 10 frames per second.
     tiles = TileManager(
-        MATRIX_SIZE, LED_PIN, draw_fps=10, strip_type=STRIP_TYPE)
+        NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
+        draw_fps=10
+    )
+    #tiles = TileManager(
+    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
+    #    draw_fps=10
+    #)
 
     # Create three tiles based on our SpeckledTile class.  Tiles are told their
     # dimensions later.  We enable animation on the first tile only.
@@ -57,24 +68,22 @@ def main():
     speckled_tile_2 = SpeckledTile(animate=False)
     speckled_tile_3 = SpeckledTile(animate=False)
 
-    # Assign the 3 tiles to the tile manager.  This is when the tiles will be
-    # given their dimensions.
+    cols = MATRIX_SIZE.cols
+    rows = MATRIX_SIZE.rows
 
-    # NOTE: This assumes an 8x8 matrix.  Tweak these values for a different-
-    # sized matrix.
-    tiles.register_tile(speckled_tile_1, size=(4, 4), root=(0, 0))
-    tiles.register_tile(speckled_tile_2, size=(4, 4), root=(4, 0))
-    tiles.register_tile(speckled_tile_3, size=(8, 4), root=(0, 4))
+    # Assign the 3 tiles to the tile manager.
+    tiles.register_tile(
+        speckled_tile_1, size=(cols//2, rows//2), root=(0, 0))
+    tiles.register_tile(
+        speckled_tile_2, size=(cols//2, rows//2), root=(cols//2, 0))
+    tiles.register_tile(
+        speckled_tile_3, size=(cols, rows//2), root=(0, rows//2))
 
     # Kick off the matrix animation loop.
     tiles.draw_hardware_matrix()
 
     try:
         while True:
-            # Change the tile manager brightness each time through the loop.
-            # This will affect all tiles being displayed on the matrix.
-            tiles.brightness = random.choice([2, 4, 8, 16, 32, 64, 128])
-
             # Update each tile's base color.  Each tile is getting different
             # data (a different random color) so we call the Tile.data()
             # methods independently rather than calling the tile manager's

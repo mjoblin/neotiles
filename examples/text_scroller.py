@@ -16,10 +16,13 @@ import time
 from bitmapfont.bitmapfont import BitmapFont
 from neopixel import ws
 from neotiles import MatrixSize, PixelColor, TileManager, Tile
+from neotiles.matrixes import NTNeoPixelMatrix
 
 
 # Set these defaults to match your specific hardware.
 MATRIX_SIZE = MatrixSize(8, 8)
+
+# For NeoPixel matrix.
 LED_PIN = 18
 STRIP_TYPE = ws.WS2811_STRIP_GRB
 
@@ -158,15 +161,23 @@ class TextScrollProgressTile(Tile):
 def main():
     # Initialize our matrix, animating at 10 frames per second.
     tiles = TileManager(
-        MATRIX_SIZE, LED_PIN, draw_fps=10, strip_type=STRIP_TYPE)
+        NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
+        draw_fps=10
+    )
 
     text_tile = TextScrollerTile()
     progress_tile = TextScrollProgressTile()
 
-    # NOTE: This assumes an 8x8 matrix.  Tweak these values for a different-
-    # sized matrix.
-    tiles.register_tile(text_tile, size=(8, 7), root=(0, 0))
-    tiles.register_tile(progress_tile, size=(8, 1), root=(0, 7))
+    # Assign the tiles to the tile manager.
+    tiles.register_tile(
+        text_tile,
+        size=(MATRIX_SIZE.cols, MATRIX_SIZE.rows - 1), root=(0, 0)
+    )
+
+    tiles.register_tile(
+        progress_tile,
+        size=(MATRIX_SIZE.cols, 1), root=(0, MATRIX_SIZE.rows - 1)
+    )
 
     # Kick off the matrix animation loop.
     tiles.draw_hardware_matrix()

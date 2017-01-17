@@ -18,12 +18,18 @@ import time
 
 from neopixel import ws
 from neotiles import MatrixSize, TileManager, PixelColor, Tile
+from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
 # Set these defaults to match your specific hardware.
 MATRIX_SIZE = MatrixSize(8, 8)
+
+# For NeoPixel matrix.
 LED_PIN = 18
 STRIP_TYPE = ws.WS2811_STRIP_GRB
+
+# For RGB matrix.
+CHAIN = 2
 
 
 # -----------------------------------------------------------------------------
@@ -109,6 +115,7 @@ class FireTile(Tile):
 
         self.fire = None
         self.palette = []
+        self.frame = 0
 
         for x in range(256):
             self.palette.append(
@@ -158,11 +165,17 @@ class FireTile(Tile):
 
 def main():
     # Initialize our matrix, animating at 10 frames per second.
-    tiles = TileManager(MATRIX_SIZE, LED_PIN, draw_fps=10,
-                        strip_type=STRIP_TYPE, led_brightness=32)
+    tiles = TileManager(
+        NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
+        draw_fps=10
+    )
+    #tiles = TileManager(
+    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
+    #    draw_fps=10
+    #)
 
-    # Determines the height of the fire.
-    size_divisor = MATRIX_SIZE.rows - (MATRIX_SIZE.rows * 0.1)
+    # Play with this number to set the fire height.
+    size_divisor = 7.2
 
     # Create two tiles based on our FireTile class.  One will display a red
     # fire based at the bottom of the matrix and the other will display a
@@ -171,7 +184,7 @@ def main():
     grn_fire = FireTile(size_divisor=size_divisor, hue_offset=50, base='top')
 
     # Each fire will take half the width of the matrix, and the full height.
-    fire_width = int(MATRIX_SIZE.cols / 2)
+    fire_width = int(MATRIX_SIZE.cols // 2)
     fire_height = MATRIX_SIZE.rows
 
     tiles.register_tile(red_fire, size=(fire_width, fire_height), root=(0, 0))

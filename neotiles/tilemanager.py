@@ -2,7 +2,6 @@ from collections import namedtuple
 import threading
 import time
 
-from neopixel import Adafruit_NeoPixel, ws
 import wrapt
 
 from neotiles.exceptions import NeoTilesError
@@ -35,32 +34,25 @@ class StoppableThread(threading.Thread):
 
 class TileManager(object):
     """
-    Manages all the tiles displayed on a hardware neopixel matrix.
+    Manages all the tiles displayed on a hardware matrix (either a neopixel
+    matrix or an RGB matrix).
 
-    TileManager is the only class in neotiles which affects the actual neopixel
-    hardware matrix.
-
-    You must specify a ``matrix_size`` matching your neopixel matrix (e.g.
-    ``(8, 8)``) as well as the ``led_pin`` you're using to talk to it (e.g.
-    ``18``). The other parameters can usually be left at their defaults.  For
-    more information on the other parameters look at the ``Adafruit_NeoPixel``
-    class in the
-    `neopixel <https://github.com/jgarff/rpi_ws281x/tree/master/python>`_
-    module.
-
-    If your RGB values appear to be mixed up (e.g. red is showing as green)
-    then try using a different ``strip_type``.  You can see a list of valid
-    strip type constants here (look for ``_STRIP_`` in the constant name):
-    https://docs.rs/ws281x/0.1.0/ws281x/ffi/index.html.  Specify a strip type
-    like this: ``strip_type=ws.WS2811_STRIP_GRB``.  For this to work you'll
-    need to ``import ws`` (which comes with the ``neopixel`` module) into your
-    code.
+    TileManager is the only class in neotiles which affects the actual hardware
+    matrix.
 
     Example usage: ::
 
         from neotiles import TileManager
+        from neotiles.matrixes import NTNeoPixelMatrix
 
-        tiles = TileManager(matrix_size=(8, 8), led_pin=18)
+        tiles = TileManager(NTNeoPixelMatrix(size=(8, 8), led_pin=18))
+
+    Or with an RGB matrix: ::
+
+        from neotiles import TileManager
+        from neotiles.matrixes import NTRGBMatrix
+
+        tiles = TileManager(NTRGBMatrix(rows=32, chain=2))
 
     **Animation**:
 
@@ -82,69 +74,24 @@ class TileManager(object):
     then the animation loop will likely keep re-drawing the matrix with the
     same unchanging pixel colors.
 
-    :param matrix_size: (:class:`MatrixSize`) Size of the neopixel matrix.
-    :param led_pin: (int) The pin you're using to talk to your neopixel matrix.
+    :param matrix: (:class:`~neotiles.matrixes.NTNeoPixelMatrix` |
+        :class:`~neotiles.matrixes.NTRGBMatrix`) The matrix being managed.
     :param draw_fps: (int|None) The frame rate for the drawing animation loop.
-    :param led_freq_hz: (int) LED frequency.
-    :param led_dma: (int) LED DMA.
-    :param led_brightness: (int) Brightness of the matrix display (0-255).
-    :param led_invert: (bool) Whether to invert the LEDs.
-    :param strip_type: (int) Neopixel strip type.
-    :raises: :class:`exceptions.NeoTilesError` if ``matrix_size`` or
-        ``led_pin`` are not specified.
     """
-    def __init__(
-            self, matrix_size=None, led_pin=None, draw_fps=10,
-            led_freq_hz=800000, led_dma=5, led_brightness=64, led_invert=False,
-            strip_type=ws.WS2811_STRIP_GRB):
-
-        if matrix_size is None or led_pin is None:
-            raise NeoTilesError('matrix_size and led_pin must be specified')
-
-        self._matrix_size = MatrixSize(*matrix_size)
-        self._led_pin = led_pin
+    def __init__(self, matrix, draw_fps=10):
+        self.hardware_matrix = matrix
         self._draw_fps = draw_fps
-        self._led_freq_hz = led_freq_hz
-        self._led_dma = led_dma
-        self._led_brightness = led_brightness
-        self._led_invert = led_invert
-        self._strip_type = strip_type
 
+        self._animation_thread = None
         self._pixels = None
         self._clear_pixels()
-
-        self._led_count = self.matrix_size.cols * self.matrix_size.rows
-        self._animation_thread = None
 
         # List of tiles we'll be displaying inside the matrix.
         self._managed_tiles = []
 
-        # Initialize the matrix.
-        self.hardware_matrix = Adafruit_NeoPixel(
-            self._led_count, self._led_pin, freq_hz=self._led_freq_hz,
-            dma=self._led_dma, invert=self._led_invert,
-            brightness=self._led_brightness, strip_type=self._strip_type
-        )
-
-        self.hardware_matrix.begin()
-
     def __repr__(self):
-        strip_name = self._strip_type
-
-        # Convert strip name from strip type integer to associated attribute
-        # name from ws module (if we can find it).
-        for strip_check in [attr for attr in dir(ws) if '_STRIP_' in attr]:
-            if getattr(ws, strip_check) == self._strip_type:
-                strip_name = 'ws.{}'.format(strip_check)
-
-        return (
-            '{}(matrix_size={}, led_pin={}, led_freq_hz={}, led_dma={}, '
-            'led_brightness={}, led_invert={}, strip_type={})'
-        ).format(
-            self.__class__.__name__, self.matrix_size, self._led_pin,
-            self._led_freq_hz, self._led_dma, self._led_brightness,
-            self._led_invert, strip_name
-        )
+        return '{}(matrix={}, draw_fps={}'.format(
+            self.__class__.__name__, repr(self.hardware_matrix), self._draw_fps)
 
     def __str__(self):
         matrix = self.pixels
@@ -259,11 +206,18 @@ class TileManager(object):
         for row_num in range(len(pixels)):
             for col_num in range(len(pixels[row_num])):
                 color = pixels[row_num][col_num]
-                self.hardware_matrix.setPixelColor(
-                    pixel_num, color.hardware_int)
+                self.hardware_matrix.setPixelColor(col_num, row_num, color)
+                #self.hardware_matrix.setPixelColor(
+                #    pixel_num, color.hardware_int)
+
+                #cd = color.components_denormalized
+                #self.frame_canvas.SetPixel(
+                #    col_num, row_num, cd[0], cd[1], cd[2])
                 pixel_num += 1
 
         self.hardware_matrix.show()
+        #self.hardware_matrix.show()
+        #self.frame_canvas = self.big_matrix.SwapOnVSync(self.frame_canvas)
 
     def _animate(self):
         """
@@ -326,7 +280,7 @@ class TileManager(object):
         no longer be drawn to the hardware matrix.
 
         If deregistering the tile results in no tiles being registered with
-        the manager, then the matrix-drawing animation loop will be stopped
+        the manager then the matrix-drawing animation loop will be stopped
         automatically.
 
         :param tile: (:class:`Tile`) The tile being deregistered.
@@ -394,38 +348,34 @@ class TileManager(object):
         Clears the hardware matrix (sets all pixels to
         ``PixelColor(0, 0, 0, 0)``).
         """
-        for pixel_num in range(self._led_count):
-            self.hardware_matrix.setPixelColor(pixel_num, 0)
+        pixels = self.pixels
+        black_pixel = PixelColor(0, 0, 0)
+
+        for row_num in range(len(pixels)):
+            for col_num in range(len(pixels[row_num])):
+                self.hardware_matrix.setPixelColor(
+                    col_num, row_num, black_pixel)
 
         self.hardware_matrix.show()
 
     @property
     def brightness(self):
         """
-        (int) Get or set the brightness (between 0 and 255) of the matrix
-        display.
+        (int) Get or set the brightness of the matrix display.  Range of
+            acceptable values will depend on the matrix type.
         """
-        return self._led_brightness
+        return self.hardware_matrix.brightness
 
     @brightness.setter
     def brightness(self, val):
-        error_msg = 'Brightness must be between 0 and 255'
-
-        try:
-            if val >= 0 and val <= 255:
-                self._led_brightness = val
-                self.hardware_matrix.setBrightness(self._led_brightness)
-            else:
-                raise ValueError(error_msg)
-        except TypeError:
-            raise ValueError(error_msg)
+        self.hardware_matrix.brightness = val
 
     @property
     def matrix_size(self):
         """
         (:class:`MatrixSize`) Get the size of the matrix.
         """
-        return self._matrix_size
+        return self.hardware_matrix.size
 
     @property
     def tiles(self):
