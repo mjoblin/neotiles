@@ -11,7 +11,7 @@
 neotiles
 ========
 
-neotiles is a Python library which allows you to split either a
+neotiles is a Python library which allows you to divide either a
 `neopixel matrix`_ or an `RGB matrix`_ into independent animated tiles for
 rendering based on arbitrary input data.  Each tile can display something
 different: a block of color, an animation, scrolling text, or whatever else you

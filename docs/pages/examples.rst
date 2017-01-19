@@ -154,6 +154,10 @@ This example is mostly copy-pasted from `this gist`_ which is described in
 
 `Fire source`_.
 
+.. image:: /_static/fire.jpg
+   :width: 500
+   :align: center
+
 This example shows how to:
 
 * Use the :meth:`Tile.on_size_set` handler.

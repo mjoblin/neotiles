@@ -7,7 +7,7 @@ Installation is done with pip: ::
 
 There's a few additional things to contend with though:
 
-#. neotiles depends on additional libraries (used to drive the neopixel and RGB matrixes) which need to be manually installed.
+#. neotiles depends on additional libraries (used to drive the neopixel and RGB matrixes) which need to be installed manually.
 #. You may need to disable audio on your Raspberry Pi.
 #. Any scripts running neotiles need to be run as root so the hardware can be accessed properly.
 
