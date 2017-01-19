@@ -8,6 +8,8 @@ except ImportError:
 from neotiles import MatrixSize
 from neotiles.exceptions import NeoTilesError
 
+__all__ = ['NTMatrix', 'NTNeoPixelMatrix', 'NTRGBMatrix']
+
 
 class NTMatrix(object):
     """
@@ -126,13 +128,21 @@ class NTNeoPixelMatrix(NTMatrix):
 
     @brightness.setter
     def brightness(self, val):
-        self._brightness = val
-        self.hardware_matrix.setBrightness(self._brightness)
+        error_msg = 'Brightness must be between 0 and 255'
+
+        try:
+            if val >= 0 and val <= 255:
+                self._brightness = val
+                self.hardware_matrix.setBrightness(self._brightness)
+            else:
+                raise ValueError(error_msg)
+        except TypeError:
+            raise ValueError(error_msg)
 
 
 class NTRGBMatrix(NTMatrix):
     """
-    Represents an RGB matrix.
+    Represents an RGB Matrix.
 
     :param rows: (int) Number of rows in the matrix.
     :param chain: (int) Number of chains in the matrix.
@@ -154,7 +164,7 @@ class NTRGBMatrix(NTMatrix):
         self.frame_canvas = self.hardware_matrix.CreateFrameCanvas()
 
     def __repr__(self):
-        return '{}(rows={}, chain={}, parallel={}'.format(
+        return '{}(rows={}, chain={}, parallel={})'.format(
             self.__class__.__name__, self._rows, self._chain, self._parallel)
 
     def setPixelColor(self, x, y, color):
@@ -170,4 +180,13 @@ class NTRGBMatrix(NTMatrix):
 
     @brightness.setter
     def brightness(self, val):
-        self.hardware_matrix.brightness = val
+        error_msg = 'Brightness must be between 0 and 100'
+
+        try:
+            if val >= 0 and val <= 100:
+                self._brightness = val
+                self.hardware_matrix.brightness = val
+            else:
+                raise ValueError(error_msg)
+        except TypeError:
+            raise ValueError(error_msg)

@@ -3,19 +3,36 @@ import time
 import pytest
 
 from neotiles import PixelColor, Tile, TileManager
+from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
+HARDWARE_NEOPIXEL = pytest.config.getoption('--hardware-neopixel')
+HARDWARE_RGB = pytest.config.getoption('--hardware-rgb')
+
+# neopixel matrix
 HARDWARE_LED_PIN = pytest.config.getoption('--hardware-led-pin')
 HARDWARE_COLS = pytest.config.getoption('--hardware-cols')
+
+# rgb matrix
+HARDWARE_CHAIN = pytest.config.getoption('--hardware-chain')
+HARDWARE_PARALLEL = pytest.config.getoption('--hardware-parallel')
+
+# both neopixel and hardware matrixes
 HARDWARE_ROWS = pytest.config.getoption('--hardware-rows')
 
-
 hardware = pytest.mark.skipif(
-    pytest.config.getoption('--hardware-led-pin') is None or
-    pytest.config.getoption('--hardware-cols') is None or
-    pytest.config.getoption('--hardware-rows') is None,
-    reason='need --hardware-led-pin, --hardware-cols, and --hardware-rols '
-           'options to run'
+    (HARDWARE_NEOPIXEL is False and HARDWARE_RGB is False) or
+    (HARDWARE_RGB and (
+        HARDWARE_ROWS is None or
+        HARDWARE_CHAIN is None or
+        HARDWARE_PARALLEL is None
+    )) or
+    (HARDWARE_NEOPIXEL and (
+        HARDWARE_LED_PIN is None or
+        HARDWARE_COLS is None or
+        HARDWARE_ROWS is None
+    )),
+    reason='one or more required --hardware flags were not specified'
 )
 
 
@@ -35,12 +52,26 @@ class TestHardware:
         single color, filling the entire matrix.  Checks the pixels look
         right and tries to draw it to the hardware with animation enabled.
         """
-        tm = TileManager(
-            (HARDWARE_COLS, HARDWARE_ROWS), led_pin=HARDWARE_LED_PIN)
+        if HARDWARE_NEOPIXEL:
+            matrix = NTNeoPixelMatrix(
+                size=(HARDWARE_COLS, HARDWARE_ROWS),
+                led_pin=HARDWARE_LED_PIN
+            )
+        else:
+            matrix = NTRGBMatrix(
+                rows=HARDWARE_ROWS,
+                chain=HARDWARE_CHAIN,
+                parallel=HARDWARE_PARALLEL
+            )
+
+        rows = matrix.size.rows
+        cols = matrix.size.cols
+
+        tm = TileManager(matrix=matrix)
 
         red_color = PixelColor(128, 0, 0)
         tile = Tile(default_color=red_color)
-        tm.register_tile(tile, size=(8, 8), root=(0, 0))
+        tm.register_tile(tile, size=(cols, rows), root=(0, 0))
 
         # Start the animation loop.
         tm.draw_hardware_matrix()
@@ -64,15 +95,26 @@ class TestHardware:
         """
         Same test but with animation disabled.
         """
-        tm = TileManager(
-            (HARDWARE_COLS, HARDWARE_ROWS),
-            led_pin=HARDWARE_LED_PIN,
-            draw_fps=None
-        )
+        if HARDWARE_NEOPIXEL:
+            matrix = NTNeoPixelMatrix(
+                size=(HARDWARE_COLS, HARDWARE_ROWS),
+                led_pin=HARDWARE_LED_PIN
+            )
+        else:
+            matrix = NTRGBMatrix(
+                rows=HARDWARE_ROWS,
+                chain=HARDWARE_CHAIN,
+                parallel=HARDWARE_PARALLEL
+            )
+
+        rows = matrix.size.rows
+        cols = matrix.size.cols
+
+        tm = TileManager(matrix=matrix, draw_fps=None)
 
         red_color = PixelColor(128, 0, 0)
         tile = Tile(default_color=red_color)
-        tm.register_tile(tile, size=(8, 8), root=(0, 0))
+        tm.register_tile(tile, size=(cols, rows), root=(0, 0))
 
         # Draw the tile in red.
         tm.draw_hardware_matrix()

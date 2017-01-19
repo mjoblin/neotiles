@@ -90,8 +90,11 @@ class TileManager(object):
         self._managed_tiles = []
 
     def __repr__(self):
-        return '{}(matrix={}, draw_fps={}'.format(
-            self.__class__.__name__, repr(self.hardware_matrix), self._draw_fps)
+        return '{}(matrix={}, draw_fps={})'.format(
+            self.__class__.__name__,
+            repr(self.hardware_matrix),
+            self._draw_fps
+        )
 
     def __str__(self):
         matrix = self.pixels
@@ -199,7 +202,6 @@ class TileManager(object):
         hardware.
         """
         pixels = self.pixels
-        pixel_num = 0
 
         # Walk through the matrix from the top left to the bottom right,
         # painting pixels as we go.
@@ -207,17 +209,8 @@ class TileManager(object):
             for col_num in range(len(pixels[row_num])):
                 color = pixels[row_num][col_num]
                 self.hardware_matrix.setPixelColor(col_num, row_num, color)
-                #self.hardware_matrix.setPixelColor(
-                #    pixel_num, color.hardware_int)
-
-                #cd = color.components_denormalized
-                #self.frame_canvas.SetPixel(
-                #    col_num, row_num, cd[0], cd[1], cd[2])
-                pixel_num += 1
 
         self.hardware_matrix.show()
-        #self.hardware_matrix.show()
-        #self.frame_canvas = self.big_matrix.SwapOnVSync(self.frame_canvas)
 
     def _animate(self):
         """
