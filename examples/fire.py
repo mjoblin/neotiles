@@ -16,19 +16,23 @@ from __future__ import division
 import random
 import time
 
-from neopixel import ws
+try:
+    from neopixel import ws
+    STRIP_TYPE = ws.WS2811_STRIP_GRB
+except ImportError:
+    STRIP_TYPE = None
+
 from neotiles import MatrixSize, TileManager, PixelColor, Tile
 from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
-# Set these defaults to match your specific hardware.
+# Matrix size.  cols, rows.
 MATRIX_SIZE = MatrixSize(8, 8)
 
-# For NeoPixel matrix.
+# For a neopixel matrix.
 LED_PIN = 18
-STRIP_TYPE = ws.WS2811_STRIP_GRB
 
-# For RGB matrix.
+# For an RGB matrix.
 CHAIN = 2
 
 
@@ -174,7 +178,9 @@ def main():
     #    draw_fps=10
     #)
 
-    # Play with this number to set the fire height.
+    # Play with this number to set the fire height.  4.3 is pretty good for
+    # an RGB matrix of 32 rows.  7.2 is pretty good for a neopixel matrix of
+    # 8 rows.
     size_divisor = 7.2
 
     # Create two tiles based on our FireTile class.  One will display a red

@@ -19,10 +19,10 @@ from neotiles import MatrixSize, PixelColor, TileManager, Tile
 from neotiles.matrixes import NTNeoPixelMatrix
 
 
-# Set these defaults to match your specific hardware.
+# Matrix size.  cols, rows.
 MATRIX_SIZE = MatrixSize(8, 8)
 
-# For NeoPixel matrix.
+# For a neopixel matrix.
 LED_PIN = 18
 STRIP_TYPE = ws.WS2811_STRIP_GRB
 

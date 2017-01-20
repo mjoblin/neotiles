@@ -3,28 +3,31 @@
 Examples
 ========
 
-To run the following examples you first need to
+All these examples are animated which the below photos aren't great at showing.
+Imagination.
+
+To run the examples you first need to
 `install neotiles <installation.html>`_.  Once that's done you can either
 copy/paste the example code from the github links below, or clone the neotiles
 repository from gitlab: ::
 
     git clone https://github.com/mjoblin/neotiles.git
 
-The examples are in the ``neotiles/examples`` directory.  You'll need to edit
-them slightly to ensure they'll work with your particular matrix.  Look for
-these lines: ::
+The examples are in the ``neotiles/examples`` directory.  Out of the box they
+should work with an 8x8 neopixel matrix on pin 18, but you'll likely need to
+edit them slightly to ensure they'll work with your particular matrix.  Look
+for these lines: ::
 
-   # Set these defaults to match your specific hardware.
-   MATRIX_SIZE = MatrixSize(64, 32)
+   # Matrix size.  cols, rows.
+   MATRIX_SIZE = MatrixSize(8, 8)
 
-   # For NeoPixel matrix.
+   # For a neopixel matrix.
    LED_PIN = 18
-   STRIP_TYPE = ws.WS2811_STRIP_GRB
 
-   # For RGB matrix.
+   # For an RGB matrix.
    CHAIN = 2
 
-And then enable either the ``NTNeoPixelMatrix``: ::
+And then further down in the code uncomment either the ``NTNeoPixelMatrix``: ::
 
     tiles = TileManager(
         NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
@@ -37,9 +40,6 @@ Or the ``NTRGBMatrix``: ::
         NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
         draw_fps=10
     )
-
-All the examples are animated which photos aren't great at showing.
-Imagination.
 
 Speckled tiles
 --------------
@@ -148,6 +148,9 @@ Fire
 Draws two fire simulations on the matrix, side by side.  One tile displays a
 red fire based at the bottom of the matrix and the other tile displays a
 green fire based at the top of the matrix.
+
+For this example you can play with ``size_divisor`` in ``main()`` to vary the
+height of the fire.
 
 This example is mostly copy-pasted from `this gist`_ which is described in
 `this video`_.

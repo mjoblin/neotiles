@@ -1,9 +1,13 @@
 try:
     from neopixel import Adafruit_NeoPixel, ws
-    from rgbmatrix import RGBMatrix
     DEFAULT_STRIP_TYPE = ws.WS2811_STRIP_GRB
 except ImportError:
     DEFAULT_STRIP_TYPE = None
+
+try:
+    from rgbmatrix import RGBMatrix
+except ImportError:
+    pass
 
 from neotiles import MatrixSize
 from neotiles.exceptions import NeoTilesError

@@ -15,7 +15,11 @@ Installing additional libraries
 -------------------------------
 
 You'll need to follow the instructions for installing the `neopixel libraries`_
-and/or the `RGB matrix libraries`_ before you can run any neotiles code.
+and/or the `RGB matrix libraries`_ before you can run any neotiles code.  This
+usually involves cloning a git repository, running some ``make`` commands, and
+then running a ``python setup.py install`` in the python subdirectory of the
+cloned repo.  If you're using an RGB matrix then you probably also need to
+``pip install Pillow``.
 
 Disabling audio
 ---------------

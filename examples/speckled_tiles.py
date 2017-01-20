@@ -9,19 +9,23 @@
 import random
 import time
 
-from neopixel import ws
+try:
+    from neopixel import ws
+    STRIP_TYPE = ws.WS2811_STRIP_GRB
+except ImportError:
+    STRIP_TYPE = None
+
 from neotiles import MatrixSize, TileManager, PixelColor, Tile, TilePosition
 from neotiles.matrixes import NTNeoPixelMatrix, NTRGBMatrix
 
 
-# Set these defaults to match your specific hardware.
+# Matrix size.  cols, rows.
 MATRIX_SIZE = MatrixSize(8, 8)
 
-# For NeoPixel matrix.
+# For a neopixel matrix.
 LED_PIN = 18
-STRIP_TYPE = ws.WS2811_STRIP_GRB
 
-# For RGB matrix.
+# For an RGB matrix.
 CHAIN = 2
 
 
