@@ -161,6 +161,25 @@ This example is mostly copy-pasted from `this gist`_ which is described in
    :width: 500
    :align: center
 
+Here's the same example altered to show 64 fires, each in their own 1-pixel
+wide tile:
+
+.. image:: /_static/fire_64.jpg
+   :width: 500
+   :align: center
+
+The code for the above looks like this: ::
+
+    size_divisor = 4.3
+    hue_offset = 0
+
+    tiles = TileManager(NTRGBMatrix(rows=32, chain=2))
+
+    for i in range(64):
+        fire = FireTile(size_divisor=size_divisor, hue_offset=hue_offset)
+        hue_offset += 4
+        tiles.register_tile(fire, size=(1, 32), root=(i, 0))
+
 This example shows how to:
 
 * Use the :meth:`Tile.on_size_set` handler.
