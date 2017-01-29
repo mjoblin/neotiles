@@ -14,19 +14,21 @@ HARDWARE_LED_PIN = pytest.config.getoption('--hardware-led-pin')
 HARDWARE_COLS = pytest.config.getoption('--hardware-cols')
 
 # rgb matrix
-HARDWARE_CHAIN = pytest.config.getoption('--hardware-chain')
+HARDWARE_CHAIN_LENGTH = pytest.config.getoption('--hardware-chain-length')
 HARDWARE_PARALLEL = pytest.config.getoption('--hardware-parallel')
 
 # both neopixel and hardware matrixes
 HARDWARE_ROWS = pytest.config.getoption('--hardware-rows')
 
 hardware = pytest.mark.skipif(
-    (HARDWARE_NEOPIXEL is False and HARDWARE_RGB is False) or
+    (HARDWARE_NEOPIXEL is False and HARDWARE_RGB is False)
+    or
     (HARDWARE_RGB and (
         HARDWARE_ROWS is None or
-        HARDWARE_CHAIN is None or
+        HARDWARE_CHAIN_LENGTH is None or
         HARDWARE_PARALLEL is None
-    )) or
+    ))
+    or
     (HARDWARE_NEOPIXEL and (
         HARDWARE_LED_PIN is None or
         HARDWARE_COLS is None or
@@ -60,7 +62,7 @@ class TestHardware:
         else:
             matrix = NTRGBMatrix(
                 rows=HARDWARE_ROWS,
-                chain=HARDWARE_CHAIN,
+                chain_length=HARDWARE_CHAIN_LENGTH,
                 parallel=HARDWARE_PARALLEL
             )
 
@@ -103,7 +105,7 @@ class TestHardware:
         else:
             matrix = NTRGBMatrix(
                 rows=HARDWARE_ROWS,
-                chain=HARDWARE_CHAIN,
+                chain_length=HARDWARE_CHAIN_LENGTH,
                 parallel=HARDWARE_PARALLEL
             )
 

@@ -16,4 +16,4 @@ def manager_neopixel():
 
 @pytest.fixture
 def manager_rgb():
-    return TileManager(NTRGBMatrix(rows=32, chain=1))
+    return TileManager(NTRGBMatrix(chain_length=1))

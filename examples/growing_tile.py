@@ -34,10 +34,7 @@ def main():
         NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
         draw_fps=10
     )
-    #tiles = TileManager(
-    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
-    #    draw_fps=10
-    #)
+    #tiles = TileManager(NTRGBMatrix(chain_length=CHAIN), draw_fps=10)
 
     # Use the default Tile class, setting its color to red.  We don't need to
     # override the draw method for this example as the default block drawing

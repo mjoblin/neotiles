@@ -88,10 +88,7 @@ def main():
         NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
         draw_fps=10
     )
-    #tiles = TileManager(
-    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
-    #    draw_fps=10
-    #)
+    #tiles = TileManager(NTRGBMatrix(chain_length=CHAIN), draw_fps=10)
 
     # Create three tiles based on our SpeckledTile class.  Tiles are told their
     # dimensions later.  We enable animation on the first tile only.

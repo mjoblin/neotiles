@@ -173,10 +173,7 @@ def main():
         NTNeoPixelMatrix(MATRIX_SIZE, LED_PIN, strip_type=STRIP_TYPE),
         draw_fps=10
     )
-    #tiles = TileManager(
-    #    NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
-    #    draw_fps=10
-    #)
+    #tiles = TileManager(NTRGBMatrix(chain_length=CHAIN), draw_fps=10)
 
     # Play with this number to set the fire height.  4.3 is pretty good for
     # an RGB matrix of 32 rows.  7.2 is pretty good for a neopixel matrix of

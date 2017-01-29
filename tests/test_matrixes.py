@@ -56,4 +56,11 @@ class TestMatrixes:
         Test the RGB matrix default representation.
         """
         matrix = NTRGBMatrix()
-        assert repr(matrix) == 'NTRGBMatrix(rows=32, chain=1, parallel=1)'
+        assert repr(matrix) == (
+            'NTRGBMatrix(brightness=100, chain_length=1, daemon=0, '
+            'disable_hardware_pulsing=False, drop_privileges=1, '
+            'gpio_slowdown=1, hardware_mapping=b\'adafruit-hat-pwm\', '
+            'inverse_colors=False, parallel=1, pwm_bits=11, '
+            'pwm_lsb_nanoseconds=130, rows=32, scan_mode=0, '
+            'show_refresh_rate=False, swap_green_blue=False)'
+        )

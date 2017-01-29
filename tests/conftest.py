@@ -41,11 +41,11 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        '--hardware-chain',
+        '--hardware-chain-length',
         action='store',
         type='int',
-        metavar='chain',
-        help='chain count for RGB hardware test'
+        metavar='chain_length',
+        help='chain length for RGB hardware test'
     )
 
     parser.addoption(

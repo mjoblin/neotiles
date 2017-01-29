@@ -5,7 +5,7 @@ except ImportError:
     DEFAULT_STRIP_TYPE = None
 
 try:
-    from rgbmatrix import RGBMatrix
+    from rgbmatrix import RGBMatrix, RGBMatrixOptions
 except ImportError:
     pass
 
@@ -148,28 +148,57 @@ class NTRGBMatrix(NTMatrix):
     """
     Represents an RGB Matrix.
 
-    :param rows: (int) Number of rows in the matrix.
-    :param chain: (int) Number of chains in the matrix.
-    :param parallel: (int) Number of parallel chains.
+    If no options are passed in then the matrix will be initialized with
+    default options.  These options can be overridden either with ``options``
+    (which should be an ``RGBMatrixOptions`` object as provided by the
+    ``rgbmatrix`` module); or individual options can be passed into the
+    constructor.
+
+    For example, the following are equivalent: ::
+
+        from rgbmatrix import RGBMatrixOptions
+
+        options = RGBMatrixOptions()
+        options.chain_length = 2
+        options.gpio_slowdown = 3
+
+        NTRGBMatrix(options=options)
+
+    and: ::
+
+        NTRGBMatrix(chain_length=2, gpio_slowdown=3)
+
+    :param options: (RGBMatrixOptions) Matrix options.
+    :param kwargs: (*) Individual matrix options.
     """
-    def __init__(self, rows=32, chain=1, parallel=1):
+    def __init__(self, options=None, **kwargs):
         super(NTRGBMatrix, self).__init__()
 
-        self._rows = rows
-        self._chain = chain
-        self._parallel = parallel
+        if options is None:
+            options = RGBMatrixOptions()
+            for kwarg in kwargs:
+                setattr(options, kwarg, kwargs[kwarg])
 
-        self._size = MatrixSize(self._rows * self._chain, self._rows)
+        self._size = MatrixSize(
+            options.rows * options.chain_length, options.rows)
 
-        self.hardware_matrix = RGBMatrix(
-            self._rows, self._chain, self._parallel)
-        self.hardware_matrix.pwmBits = 11
-        self.hardware_matrix.brightness = 100
+        self.options = options
+        self.hardware_matrix = RGBMatrix(options=options)
         self.frame_canvas = self.hardware_matrix.CreateFrameCanvas()
 
     def __repr__(self):
-        return '{}(rows={}, chain={}, parallel={})'.format(
-            self.__class__.__name__, self._rows, self._chain, self._parallel)
+        options = [
+            attr for attr in dir(self.options) if
+            not callable(getattr(self.options, attr)) and
+            not attr.startswith('_')
+        ]
+
+        options_string = ', '.join([
+            '{}={}'.format(option, getattr(self.options, option))
+            for option in sorted(options)
+        ])
+
+        return '{}({})'.format(self.__class__.__name__, options_string)
 
     def setPixelColor(self, x, y, color):
         cd = color.components_denormalized

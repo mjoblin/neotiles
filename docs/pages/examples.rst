@@ -36,10 +36,7 @@ And then further down in the code uncomment either the ``NTNeoPixelMatrix``: ::
 
 Or the ``NTRGBMatrix``: ::
 
-    tiles = TileManager(
-        NTRGBMatrix(rows=MATRIX_SIZE.rows, chain=CHAIN),
-        draw_fps=10
-    )
+    tiles = TileManager(NTRGBMatrix(chain_length=CHAIN), draw_fps=10)
 
 Speckled tiles
 --------------
